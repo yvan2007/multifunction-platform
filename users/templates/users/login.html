@@ -3,7 +3,7 @@
 {% block title %}Connexion{% endblock %}
 
 {% block content %}
-<form method="post" class="auth-form">
+<form method="post" action="{% url 'users:login' %}" class="auth-form">
     {% csrf_token %}
     <h2 class="mb-4">Connexion</h2>
     {% if messages %}
@@ -15,6 +15,11 @@
         <div class="alert alert-danger">
             {% for error in form.non_field_errors %}
                 {{ error }}
+            {% endfor %}
+            {% for field in form %}
+                {% if field.errors %}
+                    {{ field.label }}: {{ field.errors|join:", " }}
+                {% endif %}
             {% endfor %}
         </div>
     {% endif %}

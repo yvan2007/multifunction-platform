@@ -5,7 +5,7 @@ from django.urls import reverse, reverse_lazy
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
-from django.contrib import messages
+from django.contrib import messages as django_messages  # Alias to avoid conflicts
 from .models import CustomUser, UserProfile, Address, Favorite, Message
 from ecommerce.models import Product, Cart, CartItem
 from orders.models import Order
@@ -19,12 +19,11 @@ def is_manager(user):
 
 # Utility function to validate login credentials
 def validate_login_credentials(request, form, is_manager_login=False):
-    from django.contrib import messages
     from django.db.models import Q
     from .models import CustomUser
 
     if not form.is_valid():
-        messages.error(request, "Erreur lors de la connexion. Veuillez vérifier les champs.")
+        django_messages.error(request, "Erreur lors de la connexion. Veuillez vérifier les champs.")
         return None, None
 
     login_field = form.cleaned_data.get('username')
@@ -32,7 +31,7 @@ def validate_login_credentials(request, form, is_manager_login=False):
     print(f"Validation - login_field: {login_field}, password: {password}")
 
     if not login_field or not password:
-        messages.error(request, "Le nom d'utilisateur/email et le mot de passe sont requis.")
+        django_messages.error(request, "Le nom d'utilisateur/email et le mot de passe sont requis.")
         return None, None
 
     try:
@@ -43,14 +42,14 @@ def validate_login_credentials(request, form, is_manager_login=False):
 
     print("Résultat authenticate:", user)
     if user is None:
-        messages.error(request, "Nom d'utilisateur/email ou mot de passe incorrect.")
+        django_messages.error(request, "Nom d'utilisateur/email ou mot de passe incorrect.")
         return None, None
 
     if is_manager_login and not user.is_manager:
-        messages.error(request, "Vous n'êtes pas un gestionnaire. Utilisez la page de connexion client (/users/login/).")
+        django_messages.error(request, "Vous n'êtes pas un gestionnaire. Utilisez la page de connexion client (/users/login/).")
         return None, None
     elif not is_manager_login and user.is_manager:
-        messages.error(request, "Les gestionnaires doivent utiliser la page de connexion dédiée (/users/manager-login/).")
+        django_messages.error(request, "Les gestionnaires doivent utiliser la page de connexion dédiée (/users/manager-login/).")
         return None, None
 
     return user, password
@@ -63,15 +62,17 @@ def login_view(request):
         return redirect('index')
 
     if request.method == 'POST':
-        print("Données POST brutes:", request.POST)
+        print("POST data:", request.POST)
+        print("Cookies:", request.COOKIES)
+        print("CSRF token from POST:", request.POST.get('csrfmiddlewaretoken'))
+        print("CSRF token from cookie:", request.COOKIES.get('csrftoken'))
         form = CustomAuthenticationForm(request, data=request.POST)
-        print("Formulaire valide ?", form.is_valid())
+        print("Form valid?", form.is_valid())
         if form.is_valid():
-            print("Données nettoyées:", form.cleaned_data)
+            print("Cleaned data:", form.cleaned_data)
         else:
-            print("Erreurs du formulaire:", form.errors)  # Affiche les erreurs pour déboguer
+            print("Form errors:", form.errors)
         user, _ = validate_login_credentials(request, form, is_manager_login=False)
-        print("Utilisateur après validation:", user)
         if user is not None:
             login(request, user)
             # Transfert du panier de la session vers l'utilisateur connecté
@@ -89,10 +90,9 @@ def login_view(request):
                 del request.session['cart']
                 request.session.modified = True
             next_url = request.GET.get('next', 'index')
-            messages.success(request, "Connexion réussie !")
+            print("Type of django_messages:", type(django_messages))  # Debug
+            django_messages.success(request, "Connexion réussie !")
             return redirect(next_url)
-        else:
-            print("Échec de la connexion")
     else:
         form = CustomAuthenticationForm()
 
@@ -104,7 +104,7 @@ def manager_login_view(request):
         if request.user.is_manager:
             return redirect('manager_dashboard')
         else:
-            messages.error(request, "Vous n'êtes pas autorisé à accéder à cette page.")
+            django_messages.error(request, "Vous n'êtes pas autorisé à accéder à cette page.")
             return redirect('index')
 
     if '2fa_code' in request.session:
@@ -113,12 +113,12 @@ def manager_login_view(request):
             if entered_code == request.session['2fa_code']:
                 user = CustomUser.objects.get(id=request.session['user_id'])
                 login(request, user)
-                messages.success(request, "Connexion réussie !")
+                django_messages.success(request, "Connexion réussie !")
                 del request.session['2fa_code']
                 del request.session['user_id']
                 return redirect('manager_dashboard')
             else:
-                messages.error(request, "Code 2FA incorrect.")
+                django_messages.error(request, "Code 2FA incorrect.")
                 return render(request, 'users/manager_login_2fa.html')
         return render(request, 'users/manager_login_2fa.html')
 
@@ -128,10 +128,10 @@ def manager_login_view(request):
         if user is not None:
             secret_code = form.cleaned_data.get('secret_code')
             if not secret_code:
-                messages.error(request, "Le code secret est requis pour les gestionnaires.")
+                django_messages.error(request, "Le code secret est requis pour les gestionnaires.")
                 return render(request, 'users/manager_login.html', {'form': form})
             if secret_code != user.secret_code:
-                messages.error(request, "Code secret incorrect.")
+                django_messages.error(request, "Code secret incorrect.")
                 return render(request, 'users/manager_login.html', {'form': form})
 
             code = ''.join(random.choices(string.digits, k=6))
@@ -146,9 +146,9 @@ def manager_login_view(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
-                messages.info(request, "Un code de vérification a été envoyé à votre email.")
+                django_messages.info(request, "Un code de vérification a été envoyé à votre email.")
             except Exception as e:
-                messages.error(request, "Erreur lors de l'envoi du code 2FA. Veuillez réessayer plus tard.")
+                django_messages.error(request, "Erreur lors de l'envoi du code 2FA. Veuillez réessayer plus tard.")
                 return render(request, 'users/manager_login.html', {'form': form})
             return render(request, 'users/manager_login_2fa.html')
     else:
@@ -176,18 +176,18 @@ def register(request):
                         recipient_list=[user.email],
                         fail_silently=False,
                     )
-                    messages.success(request, "Inscription réussie ! Vérifiez votre email pour le code secret.")
+                    django_messages.success(request, "Inscription réussie ! Vérifiez votre email pour le code secret.")
                 except Exception as e:
-                    messages.error(request, "Inscription réussie, mais erreur lors de l'envoi du code secret. Contactez l'administrateur.")
+                    django_messages.error(request, "Inscription réussie, mais erreur lors de l'envoi du code secret. Contactez l'administrateur.")
                 return redirect('users:login')
             else:
                 if 'username' in form.errors:
-                    messages.error(request, "Ce nom d'utilisateur est déjà pris.")
+                    django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
                 if 'email' in form.errors:
-                    messages.error(request, "Cet email est déjà utilisé.")
+                    django_messages.error(request, "Cet email est déjà utilisé.")
                 if 'password2' in form.errors:
-                    messages.error(request, "Les mots de passe ne correspondent pas.")
-                messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
+                    django_messages.error(request, "Les mots de passe ne correspondent pas.")
+                django_messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
         else:
             form = ManagerCreationForm()
     else:
@@ -196,7 +196,7 @@ def register(request):
             if form.is_valid():
                 username = form.cleaned_data.get('username')
                 if CustomUser.objects.filter(username=username).exists():
-                    messages.error(request, "Ce nom d'utilisateur est déjà pris.")
+                    django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
                     return render(request, 'users/register.html', {'form': form, 'user_type': user_type})
                 user = form.save()
                 UserProfile.objects.create(user=user)
@@ -204,19 +204,19 @@ def register(request):
                 user = authenticate(request, username=username, password=password)
                 if user is not None:
                     login(request, user)
-                    messages.success(request, "Inscription réussie ! Vous êtes maintenant connecté.")
+                    django_messages.success(request, "Inscription réussie ! Vous êtes maintenant connecté.")
                     return redirect('index')
                 else:
-                    messages.error(request, "Erreur lors de la connexion automatique. Veuillez vous connecter manuellement.")
+                    django_messages.error(request, "Erreur lors de la connexion automatique. Veuillez vous connecter manuellement.")
                     return redirect('users:login')
             else:
                 if 'username' in form.errors:
-                    messages.error(request, "Ce nom d'utilisateur est déjà pris.")
+                    django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
                 if 'email' in form.errors:
-                    messages.error(request, "Cet email est déjà utilisé.")
+                    django_messages.error(request, "Cet email est déjà utilisé.")
                 if 'password2' in form.errors:
-                    messages.error(request, "Les mots de passe ne correspondent pas.")
-                messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
+                    django_messages.error(request, "Les mots de passe ne correspondent pas.")
+                django_messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
         else:
             form = CustomUserCreationForm()
 
@@ -237,7 +237,7 @@ def edit_profile(request):
         user.email = request.POST.get('email')
         user.username = request.POST.get('username')
         user.save()
-        messages.success(request, 'Profil mis à jour avec succès.')
+        django_messages.success(request, 'Profil mis à jour avec succès.')
         return redirect('users:profile')
     return render(request, 'users/edit_profile.html', {'user': request.user})
 
@@ -252,12 +252,12 @@ def account_settings(request):
         address_form = AddressForm(request.POST)
         if profile_form.is_valid():
             profile_form.save()
-            messages.success(request, "Profil mis à jour avec succès !")
+            django_messages.success(request, "Profil mis à jour avec succès !")
         if address_form.is_valid():
             address = address_form.save(commit=False)
             address.user = request.user
             address.save()
-            messages.success(request, "Adresse ajoutée avec succès !")
+            django_messages.success(request, "Adresse ajoutée avec succès !")
         return redirect('users:account_settings')
     else:
         profile_form = UserProfileForm(instance=profile)
@@ -279,16 +279,16 @@ def favorites(request):
         product = get_object_or_404(Product, id=product_id)
         if action == 'add':
             Favorite.objects.get_or_create(user=request.user, product=product)
-            messages.success(request, f"{product.name} ajouté aux favoris !")
+            django_messages.success(request, f"{product.name} ajouté aux favoris !")
         elif action == 'remove':
             Favorite.objects.filter(user=request.user, product=product).delete()
-            messages.success(request, f"{product.name} retiré des favoris !")
+            django_messages.success(request, f"{product.name} retiré des favoris !")
         return redirect('users:favorites')
     return render(request, 'users/favorites.html', {'favorites': favorites})
 
 # Messages view
 @login_required
-def messages(request):
+def user_messages(request): 
     sent_messages = request.user.sent_messages.all()
     received_messages = request.user.received_messages.all()
     return render(request, 'users/messages.html', {

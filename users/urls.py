@@ -25,7 +25,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
     path('favorites/', views.favorites, name='favorites'),
-    path('messages/', views.messages, name='messages'),
+    path('messages/', views.user_messages, name='messages'),
     path('orders/', views.orders, name='orders'),
     path('account-settings/', views.account_settings, name='account_settings'),
     # Password change flow
@@ -36,4 +36,5 @@ urlpatterns = [
     path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
         template_name='users/password_change_done.html'
     ), name='password_change_done'),
+    
 ]
