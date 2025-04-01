@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier un article{% endblock %}
+
+{% block content %}
+<section class="edit_article_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Modifier un article</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="post" class="portfolio-item" data-aos="fade-up">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title">Titre</label>
+                <input type="text" name="title" id="title" class="form-control" value="{{ article.title }}" required>
+            </div>
+            <div class="form-group">
+                <label for="content">Contenu</label>
+                <textarea name="content" id="content" class="form-control" rows="10" required>{{ article.content }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="category">Catégorie</label>
+                <select name="category" id="category" class="form-control" required>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id == article.category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="status">Statut</label>
+                <select name="status" id="status" class="form-control" required>
+                    <option value="draft" {% if article.status == 'draft' %}selected{% endif %}>Brouillon</option>
+                    <option value="published" {% if article.status == 'published' %}selected{% endif %}>Publié</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Modifier</button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">Annuler</a>
+        </form>
+    </div>
+</section>
+{% endblock %}

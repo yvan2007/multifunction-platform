@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Favoris - {{ block.super }}{% endblock %}
+
+{% block content %}
+    <section class="favorites_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Vos Favoris</h2>
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if favorites %}
+                <ul>
+                    {% for favorite in favorites %}
+                        <li>
+                            {{ favorite.product.name }} - {{ favorite.product.price }} €
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ favorite.product.id }}">
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Vous n'avez aucun article en favoris.</p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

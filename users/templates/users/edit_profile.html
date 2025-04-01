@@ -1,0 +1,37 @@
+### users/templates/users/edit_profile.html
+{% extends "base.html" %}
+
+{% block title %}Modifier le profil{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4">Modifier le profil</h2>
+        <form method="post">
+            {% csrf_token %}  <!-- Assurez-vous que cette ligne est présente -->
+            <div class="mb-3">
+                <label for="first_name" class="form-label">Prénom</label>
+                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="last_name" class="form-label">Nom</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="username" class="form-label">Nom d'utilisateur</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+            </div>
+            <div class="mb-3">
+                <a href="{% url 'users:password_change' %}" class="btn btn-primary w-100">
+                    <i class="fas fa-lock me-2"></i> Changer le mot de passe
+                </a>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Enregistrer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

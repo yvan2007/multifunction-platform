@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm p-4">
+        <!-- Informations de l'utilisateur -->
+        <div class="text-center mb-4">
+            {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+            {% else %}
+                <i class="fas fa-user-circle fa-5x mb-2"></i>
+            {% endif %}
+            <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+            <p class="text-muted">{{ user.email }}</p>
+            <a href="{% url 'users:edit_profile' %}" class="btn btn-primary btn-sm">Modifier le profil</a>
+        </div>
+
+        <!-- Liste des options -->
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-heart me-2"></i> Favoris
+                </div>
+                <a href="{% url 'users:favorites' %}"><i class="fas fa-chevron-right"></i></a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-envelope me-2"></i> Messagerie
+                </div>
+                <a href="{% url 'users:messages' %}"><i class="fas fa-chevron-right"></i></a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-shopping-cart me-2"></i> Vos commandes
+                </div>
+                <a href="{% url 'users:orders' %}"><i class="fas fa-chevron-right"></i></a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                </div>
+                <form action="{% url 'users:logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link p-0" style="color: #6c757d;"><i class="fas fa-chevron-right"></i></button>
+                </form>
+            </li>
+        </ul>
+
+        <!-- Version de l'application -->
+        <div class="text-center mt-4">
+            <small class="text-muted">Version de l'application 1.0</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

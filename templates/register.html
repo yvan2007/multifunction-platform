@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscription - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="register_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Inscription</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="get" action="{% url 'users:register' %}" class="portfolio-item" data-aos="fade-up">
+            <label for="user_type">Type d'utilisateur :</label>
+            <select name="user_type" id="user_type" class="form-control" onchange="this.form.submit()">
+                <option value="client" {% if user_type == 'client' %}selected{% endif %}>Client</option>
+                <option value="manager" {% if user_type == 'manager' %}selected{% endif %}>Gestionnaire</option>
+            </select>
+        </form>
+        <form method="post" class="portfolio-item" data-aos="fade-up">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.as_p }}
+            </div>
+            <div id="secret_code_field" class="form-group">
+                <label for="secret_code">Code secret (pour gestionnaires)</label>
+                <input type="text" name="secret_code" id="secret_code" class="form-control" readonly>
+            </div>
+            <button type="submit" class="btn btn-primary">S'inscrire</button>
+        </form>
+        <div class="login-options" data-aos="fade-up">
+            <p><a href="{% url 'users:login' %}">Déjà un compte ? Connectez-vous</a></p>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var secretCodeField = document.getElementById('secret_code_field');
+        var userType = document.getElementById('user_type').value;
+        if (userType === 'manager') {
+            secretCodeField.style.display = 'block';
+        } else {
+            secretCodeField.style.display = 'none';
+        }
+    });
+
+    document.getElementById('user_type').addEventListener('change', function() {
+        var secretCodeField = document.getElementById('secret_code_field');
+        if (this.value === 'manager') {
+            secretCodeField.style.display = 'block';
+        } else {
+            secretCodeField.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

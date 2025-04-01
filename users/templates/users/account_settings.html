@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Paramètres du compte - {{ block.super }}{% endblock %}
+
+{% block content %}
+    <section class="settings_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Paramètres du compte</h2>
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <h3>Modifier le profil</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ profile_form.as_p }}
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </form>
+            <h3 class="mt-4">Ajouter une adresse</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ address_form.as_p }}
+                <button type="submit" class="btn btn-primary">Ajouter l'adresse</button>
+            </form>
+            <h3 class="mt-4">Vos adresses</h3>
+            {% if addresses %}
+                <ul>
+                    {% for address in addresses %}
+                        <li>{{ address.street }}, {{ address.city }}, {{ address.postal_code }}, {{ address.country }} {% if address.is_default %}(Par défaut){% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Aucune adresse enregistrée.</p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

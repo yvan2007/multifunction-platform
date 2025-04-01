@@ -1,0 +1,16 @@
+/* Désactiver la mise en majuscule pour tous les champs de saisie */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+    text-transform: none !important;
+}
+
+input[type="text"]::first-letter,
+input[type="email"]::first-letter,
+input[type="password"]::first-letter,
+input[type="search"]::first-letter,
+textarea::first-letter {
+    text-transform: none !important;
+}

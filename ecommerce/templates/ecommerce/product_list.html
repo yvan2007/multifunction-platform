@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="product_section layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center">
+            <h2>Our <span>Products</span></h2>
+        </div>
+        <form method="get" class="mb-4">
+            <input type="text" name="q" value="{{ query }}" placeholder="Rechercher un produit..." class="form-control d-inline-block w-50">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+        <div class="row">
+            {% for product in products %}
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="box">
+                    <div class="option_container">
+                        <div class="options">
+                            <a href="{% url 'add_to_cart' product.pk %}" class="option1">Add To Cart</a>
+                            <a href="{% url 'product_detail' product.pk %}" class="option2">Buy Now</a>
+                        </div>
+                    </div>
+                    <div class="img-box">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <img src="{% static 'images/p1.png' %}" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="detail-box">
+                        <h5>{{ product.name }}</h5>
+                        <h6>{{ product.price }} €</h6>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

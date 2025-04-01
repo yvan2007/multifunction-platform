@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="product_section layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center">
+            <h2>Ajouter un Commentaire</h2>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea name="content" class="form-control" required></textarea>
+            </div>
+            <button type="submit" class="btn1">Ajouter</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

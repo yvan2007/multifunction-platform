@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Connexion - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="login_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Connexion</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="post" class="portfolio-item" data-aos="fade-up">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.login_field.label_tag }}
+                {{ form.login_field }}
+            </div>
+            <div class="form-group">
+                {{ form.password.label_tag }}
+                {{ form.password }}
+            </div>
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+        </form>
+        <div class="login-options" data-aos="fade-up">
+            <p><a href="{% url 'users:register' %}">S'inscrire</a></p>
+            <p><a href="{% url 'users:password_reset' %}">Mot de passe oublié ?</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

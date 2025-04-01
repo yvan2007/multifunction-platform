@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="product_section layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center">
+            <h2>{{ article.title }}</h2>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <p>{{ article.content|safe }}</p>
+                <p>Par {{ article.author.username }} - {{ article.created_at }}</p>
+                <a href="{% url 'like_article' article.pk %}">
+                    {% if user in article.likes.all %}Unlike{% else %}Like{% endif %}
+                </a> ({{ article.likes.count }} likes)
+                <h2>Commentaires</h2>
+                <ul>
+                    {% for comment in comments %}
+                    <li>{{ comment.user.username }} : {{ comment.content }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'add_comment' article.pk %}" class="btn1">Ajouter un commentaire</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

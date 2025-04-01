@@ -1,0 +1,289 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        {% if user.is_manager %}
+            <section class="manager_section py-5">
+                <div class="container">
+                    <h2 class="section-title">Gestion du Portfolio</h2>
+                    <a href="{% url 'manager_dashboard' %}" class="btn btn-primary" data-aos="fade-up">
+                        <i class="fas fa-plus"></i> Gérer le contenu
+                    </a>
+                </div>
+            </section>
+        {% endif %}
+    {% endif %}
+
+    <!-- Hero Section (Carousel) -->
+    <section class="slider_section">
+        <div class="slider_bg_box">
+            <img src="{% static 'images/slider-bg.jpg' %}" alt="Fond du carrousel" class="img-fluid">
+        </div>
+        <div id="customCarousel1" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="detail-box" data-aos="fade-left">
+                                    <h1><span>Soldes 20% Off</span><br>Tout en stock</h1>
+                                    <p>
+                                        Découvrez nos produits phares avec des réductions exceptionnelles.
+                                        Qualité garantie et livraison rapide !
+                                    </p>
+                                    <div class="btn-box">
+                                        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">
+                                            Voir les produits
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6" data-aos="fade-right">
+                                <img src="{% static 'images/8333225.jpg' %}" alt="Hero Image" class="img-fluid rounded shadow">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 col-lg-6">
+                                <div class="detail-box" data-aos="fade-left">
+                                    <h1><span>Nouveautés 2025</span><br>Collection Exclusive</h1>
+                                    <p>
+                                        Découvrez nos dernières créations, alliant style et innovation.
+                                    </p>
+                                    <div class="btn-box">
+                                        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">
+                                            Découvrir
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6" data-aos="fade-right">
+                                <img src="{% static 'images/amazed-surprised-young-guy-posing-against-white-wall.jpg' %}" alt="Hero Image 2" class="img-fluid rounded shadow">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <ol class="carousel-indicators">
+                    <li data-bs-target="#customCarousel1" data-bs-slide-to="0" class="active"></li>
+                    <li data-bs-target="#customCarousel1" data-bs-slide-to="1"></li>
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us Section -->
+    <section class="why_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Pourquoi nous choisir</h2>
+            <div class="row">
+                <div class="col-md-4 portfolio-item" data-aos="fade-up">
+                    <div class="box text-center">
+                        <div class="img-box">
+                            <i class="fas fa-shipping-fast fa-3x"></i>
+                        </div>
+                        <div class="detail-box">
+                            <h5>Livraison Rapide</h5>
+                            <p>Recevez vos produits en un temps record.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="100">
+                    <div class="box text-center">
+                        <div class="img-box">
+                            <i class="fas fa-truck fa-3x"></i>
+                        </div>
+                        <div class="detail-box">
+                            <h5>Livraison Gratuite</h5>
+                            <p>Profitez de la livraison offerte sur toutes les commandes.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="200">
+                    <div class="box text-center">
+                        <div class="img-box">
+                            <i class="fas fa-star fa-3x"></i>
+                        </div>
+                        <div class="detail-box">
+                            <h5>Meilleure Qualité</h5>
+                            <p>Des produits conçus pour durer.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Arrivals Section -->
+    <section class="arrival_section layout_padding">
+        <div class="container">
+            <div class="heading_container">
+                <h2>#Nouveautés</h2>
+            </div>
+            <div class="box portfolio-item" data-aos="fade-right">
+                <div class="row align-items-center position-relative">
+                    <div class="col-md-6">
+                        <div class="arrival_bg_box">
+                            <img src="{% static 'images/arrival-bg.png' %}" alt="Fond Nouveautés" class="img-fluid">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="content-box">
+                            <p style="margin-top: 20px; margin-bottom: 30px;">
+                                {% if new_arrivals %}
+                                    {% with new_product=new_arrivals.first %}
+                                        {% with description=new_product.description|striptags %}
+                                            {{ description|truncatewords:20 }}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% else %}
+                                    Découvrez nos dernières créations, alliant style et innovation.
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Découvrir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="shop_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Nos Produits</h2>
+            <div class="row">
+                {% for product in products %}
+                <div class="col-sm-6 col-md-4 col-lg-3 portfolio-item" data-aos="fade-up">
+                    <div class="box text-center">
+                        <a href="{% url 'ecommerce:product_detail' product.slug %}">
+                            <div class="img-box">
+                                {% if product.images.first %}
+                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="img-fluid">
+                                {% else %}
+                                    <img src="{% static 'images/p1.png' %}" alt="{{ product.name }}" class="img-fluid">
+                                {% endif %}
+                            </div>
+                            <div class="detail-box">
+                                <h6>{{ product.name }}</h6>
+                                <h6>Prix <span>{{ product.price }} FCFA</span></h6>
+                            </div>
+                            <div class="new">
+                                <span>Nouveau</span>
+                            </div>
+                        </a>
+                        <form method="post" action="{% url 'ecommerce:add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary mt-2">Ajouter au panier</button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <p class="text-center">Aucun produit disponible pour le moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Articles Section -->
+    <section class="blog_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Nos Articles</h2>
+            <div class="row">
+                {% for article in articles %}
+                <div class="col-md-4 portfolio-item" data-aos="fade-up">
+                    <div class="box">
+                        <a href="{% url 'blog:article_detail' article.slug %}">
+                            {% if article.image %}
+                                <img src="{{ article.image.url }}" alt="{{ article.title }}" class="img-fluid rounded mb-3">
+                            {% else %}
+                                <img src="{% static 'images/default-article.jpg' %}" alt="Article par défaut" class="img-fluid rounded mb-3">
+                            {% endif %}
+                            <h5>{{ article.title }}</h5>
+                            <p>{{ article.content|truncatewords:20|safe }}</p>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <p class="text-center">Aucun article disponible pour le moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Subscribe Section -->
+    <section class="subscribe_section layout_padding">
+        <div class="container-fluid">
+            <div class="box">
+                <div class="row">
+                    <div class="col-md-6 offset-md-3">
+                        <div class="subscribe_form text-center" data-aos="fade-up">
+                            <h3 class="section-title">Abonnez-vous pour des offres exclusives</h3>
+                            <p>Recevez nos dernières promotions directement dans votre boîte mail.</p>
+                            <form action="{% url 'subscribe' %}" method="post">
+                                {% csrf_token %}
+                                <input type="email" name="email" placeholder="Entrez votre email" required class="form-control mb-3">
+                                <button type="submit" class="btn btn-primary">S'abonner</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonial_section layout_padding">
+        <div class="container">
+            <h2 class="section-title">Ce qu’ils disent de nous</h2>
+            {% if testimonials %}
+                <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for testimonial in testimonials %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %} portfolio-item" data-aos="fade-up">
+                                <div class="text-center">
+                                    {% if testimonial.image %}
+                                        <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}" class="rounded-circle" style="width: 100px; height: 100px;">
+                                    {% else %}
+                                        <img src="{% static 'images/default-user.jpg' %}" alt="Utilisateur par défaut" class="rounded-circle" style="width: 100px; height: 100px;">
+                                    {% endif %}
+                                    <h5>{{ testimonial.name }} - {{ testimonial.role }}</h5>
+                                    <p>{{ testimonial.content }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Ajout des indicateurs ici -->
+                    <ol class="carousel-indicators">
+                        {% for testimonial in testimonials %}
+                            <li data-bs-target="#testimonialCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></li>
+                        {% endfor %}
+                    </ol>
+                    <!-- Contrôles de navigation -->
+                    <a class="carousel-control-prev" href="#testimonialCarousel" role="button" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Précédent</span>
+                    </a>
+                    <a class="carousel-control-next" href="#testimonialCarousel" role="button" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Suivant</span>
+                    </a>
+                </div>
+            {% else %}
+                <p class="text-center">Aucun témoignage disponible pour le moment.</p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

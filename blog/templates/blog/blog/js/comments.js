@@ -1,0 +1,1 @@
+console.log("Comments script loaded");

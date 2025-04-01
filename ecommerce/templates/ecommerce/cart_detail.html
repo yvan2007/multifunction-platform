@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Votre panier</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% if cart_items %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Quantité</th>
+                    <th>Prix unitaire</th>
+                    <th>Prix total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.product.price }} FCFA</td>
+                        <td>{{ item.total_price }} FCFA</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h4>Total : {{ total_amount }} FCFA</h4>
+        {% if is_authenticated %}
+            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer la commande</a>
+        {% else %}
+            <p>Vous devez vous connecter pour passer une commande.</p>
+            <a href="{% url 'users:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary">Se connecter</a>
+        {% endif %}
+    {% else %}
+        <p>Votre panier est vide.</p>
+        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
+    {% endif %}
+</div>
+{% endblock %}

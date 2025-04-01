@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="product_section layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center">
+            <h2>Historique des Commandes</h2>
+        </div>
+        <ul>
+            {% for order in orders %}
+            <li>Commande #{{ order.id }} - Statut : {{ order.status }} - Total : {{ order.total_price }} €</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}

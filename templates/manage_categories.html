@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Gérer les catégories - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="manage_categories_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Gérer les catégories</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Catégories de produits</h3>
+                <a href="{% url 'multifunction_platform:add_product_category' %}" class="btn btn-primary mb-3">Ajouter une catégorie</a>
+                <ul>
+                    {% for category in product_categories %}
+                        <li class="portfolio-item" data-aos="fade-up">
+                            {{ category.name }}
+                            <a href="{% url 'multifunction_platform:delete_product_category' category.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+                        </li>
+                    {% empty %}
+                        <li>Aucune catégorie de produit.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h3>Catégories de blog</h3>
+                <a href="{% url 'multifunction_platform:add_blog_category' %}" class="btn btn-primary mb-3">Ajouter une catégorie</a>
+                <ul>
+                    {% for category in blog_categories %}
+                        <li class="portfolio-item" data-aos="fade-up">
+                            {{ category.name }}
+                            <a href="{% url 'multifunction_platform:delete_blog_category' category.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+                        </li>
+                    {% empty %}
+                        <li>Aucune catégorie de blog.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

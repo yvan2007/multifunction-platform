@@ -1,0 +1,26 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Connexion Manager{% endblock %}
+
+{% block content %}
+<form method="post" class="auth-form">
+    {% csrf_token %}
+    <h2 class="mb-4">Connexion Manager</h2>
+    <div class="mb-3 position-relative">
+        <input type="email" class="form-control" id="email" name="username" placeholder="Email" required>
+        <span class="input-icon">
+            <i class="fas fa-arrow-right"></i>
+        </span>
+    </div>
+    <div class="mb-3 position-relative">
+        <input type="password" class="form-control" id="password" name="password" placeholder="Mot de passe" required>
+        <span class="input-icon toggle-password">
+            <i class="fas fa-eye"></i>
+        </span>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+    <div class="mt-3">
+        <a href="{% url 'users:login' %}" class="btn btn-secondary w-100">Retour à la connexion utilisateur</a>
+    </div>
+</form>
+{% endblock %}

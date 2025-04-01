@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}À Propos - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="about py-5">
+    <div class="container">
+        <h2 class="section-title">À Propos de Nous</h2>
+        <div class="row">
+            <div class="col-md-6 portfolio-item" data-aos="fade-right">
+                <img src="{% static 'images/focused.jpg' %}" class="img-fluid rounded" alt="À Propos">
+            </div>
+            <div class="col-md-6 portfolio-item" data-aos="fade-left">
+                <h3>Qui sommes-nous ?</h3>
+                <p>Nous sommes une plateforme multifonctionnelle dédiée à offrir les meilleurs produits et contenus à nos clients. Notre mission est de rendre votre expérience d'achat et de lecture aussi agréable que possible.</p>
+                <p>Avec une équipe passionnée, nous sélectionnons soigneusement chaque produit et article pour garantir qualité et satisfaction.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

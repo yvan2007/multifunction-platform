@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tableau de bord du gestionnaire - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="manager_dashboard_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Tableau de bord du gestionnaire</h2>
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Gestion des produits -->
+        <h3>Gestion des produits</h3>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="name" class="form-label">Nom du produit</label>
+                    <input type="text" name="name" id="name" class="form-control" required>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="price" class="form-label">Prix (€)</label>
+                    <input type="number" name="price" id="price" class="form-control" step="0.01" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="category" class="form-label">Catégorie</label>
+                    <select name="category" id="category" class="form-control" required>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea name="description" id="description" class="form-control" required></textarea>
+                </div>
+            </div>
+            <button type="submit" name="add_product" class="btn btn-primary">Ajouter un produit</button>
+        </form>
+        <table class="table table-bordered mb-5">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Prix</th>
+                    <th>Catégorie</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.price }} €</td>
+                        <td>{{ product.category.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit" name="delete_product" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Aucun produit disponible.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Gestion des articles -->
+        <h3>Gestion des articles</h3>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="title" class="form-label">Titre de l'article</label>
+                    <input type="text" name="title" id="title" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="category" class="form-label">Catégorie</label>
+                    <select name="category" id="category" class="form-control" required>
+                        {% for category in blog_categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="content" class="form-label">Contenu</label>
+                    <textarea name="content" id="content" class="form-control" required></textarea>
+                </div>
+            </div>
+            <button type="submit" name="add_article" class="btn btn-primary">Ajouter un article</button>
+        </form>
+        <table class="table table-bordered mb-5">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Catégorie</th>
+                    <th>Contenu</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                    <tr>
+                        <td>{{ article.title }}</td>
+                        <td>{{ article.category.name }}</td>
+                        <td>{{ article.content|truncatewords:20|safe }}</td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="article_id" value="{{ article.id }}">
+                                <button type="submit" name="delete_article" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">Aucun article disponible.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Gestion des témoignages -->
+        <h3>Gestion des témoignages</h3>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="name" class="form-label">Nom</label>
+                    <input type="text" name="name" id="name" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="role" class="form-label">Rôle</label>
+                    <input type="text" name="role" id="role" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="content" class="form-label">Contenu</label>
+                    <textarea name="content" id="content" class="form-control" required></textarea>
+                </div>
+            </div>
+            <button type="submit" name="add_testimonial" class="btn btn-primary">Ajouter un témoignage</button>
+        </form>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Rôle</th>
+                    <th>Contenu</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for testimonial in testimonials %}
+                    <tr>
+                        <td>{{ testimonial.name }}</td>
+                        <td>{{ testimonial.role }}</td>
+                        <td>{{ testimonial.content }}</td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="testimonial_id" value="{{ testimonial.id }}">
+                                <button type="submit" name="delete_testimonial" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">Aucun témoignage disponible.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Liste des produits</h2>
+    <div class="row">
+        {% for product in products %}
+            <div class="col-md-4">
+                <h3>{{ product.name }}</h3>
+                <p>Prix : {{ product.price }} FCFA</p>
+                <a href="{% url 'ecommerce:product_detail' product.slug %}">Voir les détails</a>
+            </div>
+        {% empty %}
+            <p>Aucun produit disponible.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

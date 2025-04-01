@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historique des commandes - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="order_history_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Historique des commandes</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% if orders %}
+            <div class="row">
+                {% for order in orders %}
+                    <div class="col-md-6 portfolio-item" data-aos="fade-up">
+                        <div class="box">
+                            <h5>Commande #{{ order.id }}</h5>
+                            <p><strong>Date :</strong> {{ order.created_at }}</p>
+                            <p><strong>Total :</strong> {{ order.total_price }} €</p>
+                            <ul>
+                                {% for item in order.items.all %}
+                                    <li>{{ item.product.name }} - {{ item.quantity }} x {{ item.price }} €</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center">Vous n'avez passé aucune commande.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

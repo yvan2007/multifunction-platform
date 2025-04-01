@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter une catégorie - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="add_category_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Ajouter une catégorie {% if type == 'product' %}de produit{% else %}de blog{% endif %}</h2>
+        <form method="post" class="portfolio-item" data-aos="fade-up">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Nom de la catégorie</label>
+                <input type="text" name="name" id="name" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Ajouter</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

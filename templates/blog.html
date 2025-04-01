@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="blog_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">Nos Articles de Blog</h2>
+        {% if user.is_authenticated and user.is_manager %}
+            <div class="mb-3">
+                <a href="{% url 'add_article' %}" class="btn btn-primary" data-aos="fade-up"><i class="fas fa-plus"></i> Ajouter un article</a>
+            </div>
+        {% endif %}
+        <div class="row">
+            {% for article in articles %}
+            <div class="col-md-4 portfolio-item" data-aos="fade-up">
+                <div class="box">
+                    <a href="{% url 'article_detail' article.slug %}">
+                        <h5>{{ article.title }}</h5>
+                        <p>{{ article.content|truncatewords:20|safe }}</p>
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'like_article' article.id %}" class="btn btn-primary">
+                            {% if user in article.likes.all %}
+                                <i class="fas fa-heart"></i> Retirer des favoris ({{ article.likes.count }})
+                            {% else %}
+                                <i class="far fa-heart"></i> Aimer ({{ article.likes.count }})
+                            {% endif %}
+                        </a>
+                    {% else %}
+                        <p><a href="{% url 'login' %}">Connectez-vous</a> pour aimer cet article. ({{ article.likes.count }} likes)</p>
+                    {% endif %}
+                    {% if user.is_authenticated and user.is_manager %}
+                        <div class="mt-2">
+                            <a href="{% url 'edit_article' article.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Modifier</a>
+                            <a href="{% url 'delete_article' article.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?');"><i class="fas fa-trash"></i> Supprimer</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">Aucun article disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

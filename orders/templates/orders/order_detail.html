@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Détails de la commande #{{ order.id }}</h2>
+    <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+    <p><strong>Montant total :</strong> {{ order.total_amount }} €</p>
+    <p><strong>Statut :</strong> {{ order.status }}</p>
+    <h3>Articles</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Prix total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.ecommerce_items.all %}  <!-- Changé de 'orders_items' à 'ecommerce_items' -->
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.unit_price }} €</td>
+                    <td>{{ item.total_price }} €</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'users:orders' %}" class="btn btn-secondary">Retour à mes commandes</a>
+</div>
+{% endblock %}

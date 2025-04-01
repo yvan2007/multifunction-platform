@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Multifunction{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- AOS pour les animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Fichiers statiques -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .min-vh-100 {
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Animation de clignement des yeux (repos) */
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0); }
+        }
+
+        /* Animation de léger mouvement de la tête (repos) */
+        @keyframes head-nod {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Animation des bras pour couvrir les yeux */
+        @keyframes cover-eyes-left {
+            0% { d: path("M30 70 Q40 60 50 50"); }
+            100% { d: path("M30 70 Q40 50 50 45"); }
+        }
+
+        @keyframes cover-eyes-right {
+            0% { d: path("M70 70 Q60 60 50 50"); }
+            100% { d: path("M70 70 Q60 50 50 45"); }
+        }
+
+        /* Appliquer l'animation de repos par défaut */
+        #eye-left .pupil, #eye-right .pupil {
+            animation: blink 3s infinite;
+        }
+
+        .avatar-img {
+            animation: head-nod 4s infinite;
+        }
+
+        /* Classe pour activer l'animation de couverture des yeux */
+        .avatar-img.cover-eyes #arm-left {
+            animation: cover-eyes-left 0.5s forwards;
+        }
+
+        .avatar-img.cover-eyes #arm-right {
+            animation: cover-eyes-right 0.5s forwards;
+        }
+
+        .auth-form .form-control {
+            border-radius: 25px;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+            transition: all 0.3s ease;
+            /* Pas de transformation de casse */
+            text-transform: none;
+        }
+
+        .auth-form .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .auth-form .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #007bff;
+            cursor: pointer;
+        }
+
+        .auth-form .btn-primary {
+            border-radius: 25px;
+            padding: 10px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            /* Pas de transformation de casse */
+            text-transform: none;
+        }
+
+        .auth-form .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .auth-form .btn-secondary {
+            border-radius: 25px;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+            /* Pas de transformation de casse */
+            text-transform: none;
+        }
+
+        .auth-form .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* S'assurer que les textes statiques (titres, paragraphes, liens) respectent la casse */
+        .auth-form h2,
+        .auth-form p,
+        .auth-form a {
+            text-transform: none;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="auth-container text-center">
+            <!-- Avatar animé -->
+            <div class="avatar-container mb-4">
+                <svg id="avatar" class="avatar-img" width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" fill="#d3e3f7" />
+                    <circle cx="50" cy="30" r="10" fill="#fff" />
+                    <g id="eye-left">
+                        <circle cx="40" cy="45" r="5" fill="#000" />
+                        <circle cx="42" cy="43" r="2" fill="#fff" class="pupil" />
+                    </g>
+                    <g id="eye-right">
+                        <circle cx="60" cy="45" r="5" fill="#000" />
+                        <circle cx="62" cy="43" r="2" fill="#fff" class="pupil" />
+                    </g>
+                    <path id="mouth" d="M45 60 Q50 65 55 60" fill="none" stroke="#000" stroke-width="2" />
+                    <path id="arm-left" d="M30 70 Q40 60 50 50" fill="none" stroke="#d3e3f7" stroke-width="8" stroke-linecap="round" />
+                    <path id="arm-right" d="M70 70 Q60 60 50 50" fill="none" stroke="#d3e3f7" stroke-width="8" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <!-- Contenu principal -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const avatar = document.getElementById('avatar');
+            const eyeLeftPupil = avatar.querySelector('#eye-left .pupil');
+            const eyeRightPupil = avatar.querySelector('#eye-right .pupil');
+            const armLeft = avatar.querySelector('#arm-left');
+            const armRight = avatar.querySelector('#arm-right');
+
+            // Gérer l'affichage/masquage du mot de passe
+            const togglePasswords = document.querySelectorAll('.toggle-password');
+            togglePasswords.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+
+                    // Faire couvrir les yeux par l'avatar lorsque le mot de passe est visible
+                    if (type === 'text') {
+                        avatar.classList.add('cover-eyes');
+                        eyeLeftPupil.setAttribute('r', 0);
+                        eyeRightPupil.setAttribute('r', 0);
+                    } else {
+                        avatar.classList.remove('cover-eyes');
+                        eyeLeftPupil.setAttribute('r', 2);
+                        eyeRightPupil.setAttribute('r', 2);
+                        // Réinitialiser la position des bras
+                        armLeft.setAttribute('d', 'M30 70 Q40 60 50 50');
+                        armRight.setAttribute('d', 'M70 70 Q60 60 50 50');
+                    }
+                });
+            });
+
+            // S'assurer que les champs de saisie ne modifient pas la casse
+            const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // Ne pas modifier la casse de l'entrée utilisateur
+                    this.value = e.target.value; // Laisser la casse telle quelle
+                });
+            });
+        });
+        document.querySelectorAll('.toggle-password').forEach(item => {
+            item.addEventListener('click', function () {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

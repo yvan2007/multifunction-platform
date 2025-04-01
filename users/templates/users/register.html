@@ -1,0 +1,38 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+<form method="post" class="auth-form">
+    {% csrf_token %}  <!-- Assurez-vous que cette ligne est présente -->
+    <h2 class="mb-4">Inscription</h2>
+    <div class="mb-3 position-relative">
+        <input type="text" class="form-control" id="username" name="username" placeholder="Nom d'utilisateur" value="{{ form.username.value|default_if_none:'' }}" required>
+        <span class="input-icon">
+            <i class="fas fa-user"></i>
+        </span>
+    </div>
+    <div class="mb-3 position-relative">
+        <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="{{ form.email.value|default_if_none:'' }}" required>
+        <span class="input-icon">
+            <i class="fas fa-arrow-right"></i>
+        </span>
+    </div>
+    <div class="mb-3 position-relative">
+        <input type="password" class="form-control" id="password1" name="password1" placeholder="Mot de passe" required>
+        <span class="input-icon toggle-password">
+            <i class="fas fa-eye"></i>
+        </span>
+    </div>
+    <div class="mb-3 position-relative">
+        <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirmer le mot de passe" required>
+        <span class="input-icon toggle-password">
+            <i class="fas fa-eye"></i>
+        </span>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">S'inscrire</button>
+    <div class="mt-3">
+        <p>Déjà un compte ? <a href="{% url 'users:login' %}" class="text-primary">Se connecter</a></p>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - Portfolio Multifonction{% endblock %}
+
+{% block content %}
+<section class="product_detail_section layout_padding">
+    <div class="container">
+        <h2 class="section-title">{{ product.name }}</h2>
+        <div class="row portfolio-item" data-aos="fade-up">
+            <div class="col-md-6">
+                {% if product.images.first %}
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="img-fluid">
+                {% else %}
+                    <img src="{% static 'img/default-product.jpg' %}" alt="Produit par défaut" class="img-fluid">
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <p>{{ product.description }}</p>
+                <p><strong>Prix :</strong> {{ product.price }} €</p>
+                <p><strong>Stock :</strong> {{ product.stock }}</p>
+                <form method="post" action="{% url 'multifunction_platform:add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Ajouter au panier</button>
+                </form>
+            </div>
+        </div>
+        <h3 class="section-title">Avis</h3>
+        {% if reviews %}
+            <ul>
+                {% for review in reviews %}
+                    <li class="portfolio-item" data-aos="fade-up">
+                        <strong>{{ review.user.username }}</strong> - {{ review.rating }}/5<br>
+                        {{ review.comment }}<br>
+                        <small>{{ review.created_at }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center">Aucun avis pour ce produit.</p>
+        {% endif %}
+        {% if user.is_authenticated %}
+            <h3 class="section-title">Ajouter un avis</h3>
+            <form method="post" action="{% url 'multifunction_platform:add_review' product.slug %}" class="portfolio-item" data-aos="fade-up">
+                {% csrf_token %}
+                {{ review_form.as_p }}
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </form>
+        {% else %}
+            <p class="text-center"><a href="{% url 'users:login' %}">Connectez-vous</a> pour ajouter un avis.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
