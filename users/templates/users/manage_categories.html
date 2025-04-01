@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Gérer les catégories{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Gérer les catégories</h2>
+    <a href="{% url 'users:add_category' %}" class="btn btn-success mb-3">Ajouter une catégorie</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>
+                    <a href="{% url 'users:edit_category' category.id %}" class="btn btn-sm btn-warning">Modifier</a>
+                    <a href="{% url 'users:delete_category' category.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2">Aucune catégorie trouvée.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

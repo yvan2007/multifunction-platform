@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Gérer les articles{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Gérer les articles</h2>
+    <a href="{% url 'users:add_article' %}" class="btn btn-success mb-3">Ajouter un article</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article in articles %}
+            <tr>
+                <td>{{ article.title }}</td>
+                <td>{{ article.created_at }}</td>
+                <td>
+                    <a href="{% url 'users:edit_article' article.id %}" class="btn btn-sm btn-warning">Modifier</a>
+                    <a href="{% url 'users:delete_article' article.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">Aucun article trouvé.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

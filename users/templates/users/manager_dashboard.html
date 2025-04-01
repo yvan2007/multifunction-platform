@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord du gestionnaire{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Tableau de bord du gestionnaire</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Articles</h5>
+                    <p class="card-text">{{ article_count }} articles</p>
+                    <a href="{% url 'users:manage_articles' %}" class="btn btn-primary">Gérer</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Catégories</h5>
+                    <p class="card-text">{{ category_count }} catégories</p>
+                    <a href="{% url 'users:manage_categories' %}" class="btn btn-primary">Gérer</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Produits</h5>
+                    <p class="card-text">{{ product_count }} produits</p>
+                    <a href="{% url 'users:manage_products' %}" class="btn btn-primary">Gérer</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Commandes</h5>
+                    <p class="card-text">{{ order_count }} commandes</p>
+                    <a href="{% url 'users:manage_orders' %}" class="btn btn-primary">Gérer</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+j'ai fait des maj pour le manager celui qui gere les pages des articles et tout je veux que ce soit une nouvelle version on a fait les maj de urls views de user et j'ai cree manage_articles.html, manage_categories.html manager_dashboard.html de user aussi et une maj dans index

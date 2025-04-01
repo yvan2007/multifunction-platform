@@ -5,17 +5,17 @@
 {% block title %}Accueil - Portfolio Multifonction{% endblock %}
 
 {% block content %}
+<div class="container">
+    <h1>Bienvenue sur la plateforme</h1>
     {% if user.is_authenticated %}
         {% if user.is_manager %}
-            <section class="manager_section py-5">
-                <div class="container">
-                    <h2 class="section-title">Gestion du Portfolio</h2>
-                    <a href="{% url 'manager_dashboard' %}" class="btn btn-primary" data-aos="fade-up">
-                        <i class="fas fa-plus"></i> Gérer le contenu
-                    </a>
-                </div>
-            </section>
+            <p>Bonjour, Gestionnaire ! <a href="{% url 'users:manager_dashboard' %}" class="btn btn-primary">Accéder au tableau de bord</a></p>
+        {% else %}
+            <p>Bonjour, {{ user.username }} ! Explorez nos produits et articles.</p>
         {% endif %}
+    {% else %}
+        <p>Veuillez vous connecter pour accéder à plus de fonctionnalités.</p>
+        <a href="{% url 'users:login' %}" class="btn btn-primary">Connexion</a>
     {% endif %}
 
     <!-- Hero Section (Carousel) -->

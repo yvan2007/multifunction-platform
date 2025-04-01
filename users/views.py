@@ -9,6 +9,7 @@ from django.contrib import messages as django_messages  # Alias to avoid conflic
 from .models import CustomUser, UserProfile, Address, Favorite, Message
 from ecommerce.models import Product, Cart, CartItem
 from orders.models import Order
+from blog.models import Article, BlogCategory  # Updated to import BlogCategory
 from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, UserProfileForm, AddressForm
 import random
 import string
@@ -16,6 +17,11 @@ import string
 # Utility function to check if user is a manager
 def is_manager(user):
     return user.is_authenticated and user.is_manager
+
+# Custom decorator for manager-only access
+def manager_required(view_func):
+    decorated_view_func = login_required(user_passes_test(is_manager)(view_func))
+    return decorated_view_func
 
 # Utility function to validate login credentials
 def validate_login_credentials(request, form, is_manager_login=False):
@@ -58,7 +64,7 @@ def validate_login_credentials(request, form, is_manager_login=False):
 def login_view(request):
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('manager_dashboard')
+            return redirect('users:manager_dashboard')
         return redirect('index')
 
     if request.method == 'POST':
@@ -102,7 +108,7 @@ def login_view(request):
 def manager_login_view(request):
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('manager_dashboard')
+            return redirect('users:manager_dashboard')
         else:
             django_messages.error(request, "Vous n'êtes pas autorisé à accéder à cette page.")
             return redirect('index')
@@ -116,7 +122,7 @@ def manager_login_view(request):
                 django_messages.success(request, "Connexion réussie !")
                 del request.session['2fa_code']
                 del request.session['user_id']
-                return redirect('manager_dashboard')
+                return redirect('users:manager_dashboard')
             else:
                 django_messages.error(request, "Code 2FA incorrect.")
                 return render(request, 'users/manager_login_2fa.html')
@@ -301,6 +307,41 @@ def user_messages(request):
 def orders(request):
     orders = Order.objects.filter(user=request.user)
     return render(request, 'users/orders.html', {'orders': orders})
+
+# Manager Dashboard
+@manager_required
+def manager_dashboard(request):
+    # Fetch data for dashboard
+    articles = Article.objects.all().count()
+    categories = BlogCategory.objects.all().count()  # Updated to BlogCategory
+    products = Product.objects.all().count()
+    orders = Order.objects.all().count()
+    
+    context = {
+        'article_count': articles,
+        'category_count': categories,
+        'product_count': products,
+        'order_count': orders,
+    }
+    return render(request, 'users/manager_dashboard.html', context)
+
+# Manage Articles
+@manager_required
+def manage_articles(request):
+    articles = Article.objects.all()
+    if request.method == 'POST':
+        # Add logic to create/edit articles (e.g., via a form)
+        pass  # Placeholder for future CRUD logic
+    return render(request, 'users/manage_articles.html', {'articles': articles})
+
+# Manage Categories
+@manager_required
+def manage_categories(request):
+    categories = BlogCategory.objects.all()  # Updated to BlogCategory
+    if request.method == 'POST':
+        # Add logic to create/edit categories
+        pass  # Placeholder for future CRUD logic
+    return render(request, 'users/manage_categories.html', {'categories': categories})
 
 # Custom Password Reset View
 from django.contrib.auth.views import PasswordResetView
