@@ -16,13 +16,13 @@ class CustomUser(AbstractUser):
     ]
     sex = models.CharField(max_length=1, choices=SEX_CHOICES, blank=True, null=True)
     secret_code = models.CharField(max_length=36, blank=True, null=True, unique=True)
-    email = models.EmailField(unique=True)  # Assure que l'email est unique
+    email = models.EmailField(unique=True)
 
-    USERNAME_FIELD = 'username'  # Par défaut, mais peut être changé en 'email' si désiré
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
     def generate_secret_code(self):
-        if self.is_manager:
+        if self.is_manager and not self.secret_code:  # Only generate if not already set
             self.secret_code = str(uuid.uuid4())
             self.save()
         return self.secret_code

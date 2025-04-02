@@ -1,10 +1,17 @@
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 
 class BlogCategory(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -15,6 +22,7 @@ class Article(models.Model):
         ('published', 'Publié'),
     )
     title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
     content = CKEditor5Field()
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -31,6 +39,11 @@ class Article(models.Model):
         related_name='liked_articles',
         blank=True
     )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

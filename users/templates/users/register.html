@@ -1,38 +1,86 @@
 {% extends "auth_base.html" %}
 
-{% block title %}Inscription{% endblock %}
+{% block title %}Inscription {% if user_type == 'manager' %}Gestionnaire{% else %}Client{% endif %}{% endblock %}
 
 {% block content %}
 <form method="post" class="auth-form">
-    {% csrf_token %}  <!-- Assurez-vous que cette ligne est présente -->
-    <h2 class="mb-4">Inscription</h2>
+    {% csrf_token %}
+    <h2 class="mb-4">Inscription {% if user_type == 'manager' %}Gestionnaire{% else %}Client{% endif %}</h2>
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
     <div class="mb-3 position-relative">
-        <input type="text" class="form-control" id="username" name="username" placeholder="Nom d'utilisateur" value="{{ form.username.value|default_if_none:'' }}" required>
+        <input type="text" class="form-control" id="username" name="username" 
+               placeholder="Nom d'utilisateur" value="{{ form.username.value|default_if_none:'' }}" required>
         <span class="input-icon">
             <i class="fas fa-user"></i>
         </span>
+        {% if form.username.errors %}
+            <div class="text-danger">{{ form.username.errors }}</div>
+        {% endif %}
     </div>
     <div class="mb-3 position-relative">
-        <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="{{ form.email.value|default_if_none:'' }}" required>
+        <input type="email" class="form-control" id="email" name="email" 
+               placeholder="Email" value="{{ form.email.value|default_if_none:'' }}" required>
         <span class="input-icon">
-            <i class="fas fa-arrow-right"></i>
+            <i class="fas fa-envelope"></i> <!-- Changed to envelope for email -->
         </span>
+        {% if form.email.errors %}
+            <div class="text-danger">{{ form.email.errors }}</div>
+        {% endif %}
     </div>
     <div class="mb-3 position-relative">
-        <input type="password" class="form-control" id="password1" name="password1" placeholder="Mot de passe" required>
+        <input type="password" class="form-control" id="password1" name="password1" 
+               placeholder="Mot de passe" required>
         <span class="input-icon toggle-password">
             <i class="fas fa-eye"></i>
         </span>
+        {% if form.password1.errors %}
+            <div class="text-danger">{{ form.password1.errors }}</div>
+        {% endif %}
     </div>
     <div class="mb-3 position-relative">
-        <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirmer le mot de passe" required>
+        <input type="password" class="form-control" id="password2" name="password2" 
+               placeholder="Confirmer le mot de passe" required>
         <span class="input-icon toggle-password">
             <i class="fas fa-eye"></i>
         </span>
+        {% if form.password2.errors %}
+            <div class="text-danger">{{ form.password2.errors }}</div>
+        {% endif %}
     </div>
     <button type="submit" class="btn btn-primary w-100">S'inscrire</button>
-    <div class="mt-3">
-        <p>Déjà un compte ? <a href="{% url 'users:login' %}" class="text-primary">Se connecter</a></p>
+    <div class="mt-3 text-center">
+        <p>
+            {% if user_type == 'manager' %}
+                <a href="{% url 'users:register' %}" class="text-primary">Inscription client</a>
+            {% else %}
+                <a href="{% url 'users:register' %}?user_type=manager" class="text-primary">Inscription gestionnaire</a>
+            {% endif %}
+            | Déjà un compte ? <a href="{% url 'users:login' %}" class="text-primary">Se connecter</a>
+        </p>
     </div>
 </form>
+
+<!-- Script pour toggle password visibility -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePasswordIcons = document.querySelectorAll('.toggle-password');
+        togglePasswordIcons.forEach(icon => {
+            icon.addEventListener('click', function() {
+                const input = this.closest('.position-relative').querySelector('input');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}

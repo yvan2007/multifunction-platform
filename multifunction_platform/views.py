@@ -228,10 +228,18 @@ def password_reset_confirm(request, uidb64, token):
 
 # Vues principales
 def index(request):
-    products = Product.objects.all()[:8]
-    articles = Article.objects.all()[:3]
-    testimonials = Testimonial.objects.all()[:3]
-    return render(request, 'index.html', {'products': products, 'articles': articles, 'testimonials': testimonials})
+    cart_item_count = CartItem.objects.filter(cart__user=request.user).count() if request.user.is_authenticated else 0
+    products = Product.objects.all()[:6]
+    articles = Article.objects.filter(status='published')[:3]
+    new_arrivals = Product.objects.order_by('-created_at')[:1]
+    testimonials = Testimonial.objects.all()
+    return render(request, 'index.html', {
+        'cart_item_count': cart_item_count,
+        'products': products,
+        'articles': articles,
+        'new_arrivals': new_arrivals,
+        'testimonials': testimonials,
+    })
 
 def search_products(request):
     query = request.GET.get('q', '')

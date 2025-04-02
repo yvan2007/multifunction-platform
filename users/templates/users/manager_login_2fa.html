@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Vérification 2FA{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Vérification en deux étapes</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <p>Un code de vérification a été envoyé à votre email. Veuillez le saisir ci-dessous :</p>
+            <form method="post" class="card p-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="2fa_code" class="form-label">Code 2FA</label>
+                    <input type="text" name="2fa_code" id="2fa_code" class="form-control" maxlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Vérifier</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

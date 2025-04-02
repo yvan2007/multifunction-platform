@@ -22,7 +22,6 @@
         textarea {
             text-transform: none !important;
         }
-
         input[type="text"]::first-letter,
         input[type="email"]::first-letter,
         input[type="password"]::first-letter,
@@ -42,7 +41,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'index' %}">Accueil</a>
                     </li>
@@ -61,23 +60,39 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'contact' %}">Contact</a>
                     </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'orders:cart' %}">Panier <span class="badge bg-primary">{{ cart_item_count }}</span></a>
+                        <a class="nav-link" href="{% url 'orders:cart' %}">
+                            Panier <span class="badge bg-primary">{{ cart_item_count }}</span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         {% if user.is_authenticated %}
                             <!-- Menu déroulant pour le profil -->
                             <div class="dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-circle fa-lg"></i> <!-- Icône de profil -->
+                                    <i class="fas fa-user-circle fa-lg"></i> {{ user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                    {% if user.is_manager %}
+                                        <li><a class="dropdown-item" href="{% url 'users:manager_dashboard' %}">Tableau de bord</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'users:manage_articles' %}">Gérer les articles</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'users:manage_categories' %}">Gérer les catégories</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
                                     <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profil</a></li>
-                                    
+                                    <li><a class="dropdown-item" href="{% url 'users:orders' %}">Mes commandes</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'users:favorites' %}">Favoris</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'users:logout' %}">Déconnexion</a></li>
                                 </ul>
                             </div>
                         {% else %}
                             <a class="nav-link" href="{% url 'users:login' %}">Connexion</a>
+                            <a class="nav-link" href="{% url 'users:register' %}">Inscription</a>
+                            <!-- Optional Manager Login Link (uncomment for testing) -->
+                            <!-- <a class="nav-link" href="{% url 'users:manager_login' %}">Connexion Gestionnaire</a> -->
                         {% endif %}
                     </li>
                 </ul>
@@ -128,28 +143,20 @@
     </footer>
 
     <!-- Scripts -->
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AOS pour les animations -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init();
     </script>
-    <!-- Script pour désactiver la capitalisation automatique -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sélectionner tous les champs de saisie
             const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="search"], textarea');
-            
             inputs.forEach(input => {
-                // Désactiver la capitalisation automatique
                 input.setAttribute('autocapitalize', 'off');
                 input.setAttribute('spellcheck', 'false');
-                
-                // Empêcher toute modification de la casse par JavaScript
                 input.addEventListener('input', function(e) {
                     const originalValue = e.target.value;
-                    e.target.value = originalValue; // Conserver la valeur telle quelle
+                    e.target.value = originalValue;
                 });
             });
         });

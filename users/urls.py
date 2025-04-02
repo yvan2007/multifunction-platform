@@ -6,10 +6,10 @@ app_name = 'users'
 
 urlpatterns = [
     # Authentication routes
-    path('login/', views.login_view, name='login'),  # Custom login view
-    path('manager-login/', views.manager_login_view, name='manager_login'),  # Manager login with 2FA
-    path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),  # Logout
-    path('register/', views.register, name='register'),  # Registration
+    path('login/', views.login_view, name='login'),
+    path('manager-login/', views.manager_login_view, name='manager_login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),
+    path('register/', views.register, name='register'),
 
     # Password reset flow
     path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
@@ -44,5 +44,7 @@ urlpatterns = [
     # Manager-specific routes
     path('manager-dashboard/', views.manager_dashboard, name='manager_dashboard'),
     path('manage-articles/', views.manage_articles, name='manage_articles'),
+    path('manage-articles/edit/<int:article_id>/', views.edit_article, name='edit_article'),
     path('manage-categories/', views.manage_categories, name='manage_categories'),
+    path('manage-categories/edit/<int:category_id>/', views.edit_category, name='edit_category'),
 ]

@@ -5,12 +5,12 @@ from django.urls import reverse, reverse_lazy
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
-from django.contrib import messages as django_messages  # Alias to avoid conflicts
+from django.contrib import messages as django_messages
 from .models import CustomUser, UserProfile, Address, Favorite, Message
 from ecommerce.models import Product, Cart, CartItem
 from orders.models import Order
-from blog.models import Article, BlogCategory  # Updated to import BlogCategory
-from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, UserProfileForm, AddressForm
+from blog.models import Article, BlogCategory
+from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
 import random
 import string
 
@@ -25,9 +25,6 @@ def manager_required(view_func):
 
 # Utility function to validate login credentials
 def validate_login_credentials(request, form, is_manager_login=False):
-    from django.db.models import Q
-    from .models import CustomUser
-
     if not form.is_valid():
         django_messages.error(request, "Erreur lors de la connexion. Veuillez vérifier les champs.")
         return None, None
@@ -52,7 +49,7 @@ def validate_login_credentials(request, form, is_manager_login=False):
         return None, None
 
     if is_manager_login and not user.is_manager:
-        django_messages.error(request, "Vous n'êtes pas un gestionnaire. Utilisez la page de connexion client (/users/login/).")
+        django_messages.error(request, "Vous n’êtes pas un gestionnaire. Utilisez la page de connexion client (/users/login/).")
         return None, None
     elif not is_manager_login and user.is_manager:
         django_messages.error(request, "Les gestionnaires doivent utiliser la page de connexion dédiée (/users/manager-login/).")
@@ -68,20 +65,10 @@ def login_view(request):
         return redirect('index')
 
     if request.method == 'POST':
-        print("POST data:", request.POST)
-        print("Cookies:", request.COOKIES)
-        print("CSRF token from POST:", request.POST.get('csrfmiddlewaretoken'))
-        print("CSRF token from cookie:", request.COOKIES.get('csrftoken'))
         form = CustomAuthenticationForm(request, data=request.POST)
-        print("Form valid?", form.is_valid())
-        if form.is_valid():
-            print("Cleaned data:", form.cleaned_data)
-        else:
-            print("Form errors:", form.errors)
         user, _ = validate_login_credentials(request, form, is_manager_login=False)
         if user is not None:
             login(request, user)
-            # Transfert du panier de la session vers l'utilisateur connecté
             if 'cart' in request.session:
                 cart, created = Cart.objects.get_or_create(user=user)
                 session_cart = request.session['cart']
@@ -96,7 +83,6 @@ def login_view(request):
                 del request.session['cart']
                 request.session.modified = True
             next_url = request.GET.get('next', 'index')
-            print("Type of django_messages:", type(django_messages))  # Debug
             django_messages.success(request, "Connexion réussie !")
             return redirect(next_url)
     else:
@@ -172,7 +158,7 @@ def register(request):
             if form.is_valid():
                 user = form.save(commit=False)
                 user.is_manager = True
-                user.generate_secret_code()
+                user.generate_secret_code()  # Méthode supposée dans CustomUser pour générer un code secret
                 user.save()
                 try:
                     send_mail(
@@ -186,14 +172,6 @@ def register(request):
                 except Exception as e:
                     django_messages.error(request, "Inscription réussie, mais erreur lors de l'envoi du code secret. Contactez l'administrateur.")
                 return redirect('users:login')
-            else:
-                if 'username' in form.errors:
-                    django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
-                if 'email' in form.errors:
-                    django_messages.error(request, "Cet email est déjà utilisé.")
-                if 'password2' in form.errors:
-                    django_messages.error(request, "Les mots de passe ne correspondent pas.")
-                django_messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
         else:
             form = ManagerCreationForm()
     else:
@@ -215,14 +193,6 @@ def register(request):
                 else:
                     django_messages.error(request, "Erreur lors de la connexion automatique. Veuillez vous connecter manuellement.")
                     return redirect('users:login')
-            else:
-                if 'username' in form.errors:
-                    django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
-                if 'email' in form.errors:
-                    django_messages.error(request, "Cet email est déjà utilisé.")
-                if 'password2' in form.errors:
-                    django_messages.error(request, "Les mots de passe ne correspondent pas.")
-                django_messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les champs.")
         else:
             form = CustomUserCreationForm()
 
@@ -311,9 +281,8 @@ def orders(request):
 # Manager Dashboard
 @manager_required
 def manager_dashboard(request):
-    # Fetch data for dashboard
     articles = Article.objects.all().count()
-    categories = BlogCategory.objects.all().count()  # Updated to BlogCategory
+    categories = BlogCategory.objects.all().count()
     products = Product.objects.all().count()
     orders = Order.objects.all().count()
     
@@ -325,26 +294,83 @@ def manager_dashboard(request):
     }
     return render(request, 'users/manager_dashboard.html', context)
 
-# Manage Articles
+# Manage Articles with CRUD
 @manager_required
 def manage_articles(request):
     articles = Article.objects.all()
+    
     if request.method == 'POST':
-        # Add logic to create/edit articles (e.g., via a form)
-        pass  # Placeholder for future CRUD logic
-    return render(request, 'users/manage_articles.html', {'articles': articles})
+        if 'delete' in request.POST:
+            article_id = request.POST.get('article_id')
+            article = get_object_or_404(Article, id=article_id)
+            article.delete()
+            django_messages.success(request, "Article supprimé avec succès.")
+            return redirect('users:manage_articles')
+        else:
+            form = ArticleForm(request.POST)
+            if form.is_valid():
+                article = form.save(commit=False)
+                article.author = request.user
+                article.save()
+                form.save_m2m()  # Save tags
+                django_messages.success(request, "Article créé avec succès.")
+                return redirect('users:manage_articles')
+    else:
+        form = ArticleForm()
 
-# Manage Categories
+    return render(request, 'users/manage_articles.html', {'articles': articles, 'form': form})
+
+@manager_required
+def edit_article(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
+    if request.method == 'POST':
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Article mis à jour avec succès.")
+            return redirect('users:manage_articles')
+    else:
+        form = ArticleForm(instance=article)
+    return render(request, 'users/edit_article.html', {'form': form, 'article': article})
+
+# Manage Categories with CRUD
 @manager_required
 def manage_categories(request):
-    categories = BlogCategory.objects.all()  # Updated to BlogCategory
+    categories = BlogCategory.objects.all()
+    
     if request.method == 'POST':
-        # Add logic to create/edit categories
-        pass  # Placeholder for future CRUD logic
-    return render(request, 'users/manage_categories.html', {'categories': categories})
+        if 'delete' in request.POST:
+            category_id = request.POST.get('category_id')
+            category = get_object_or_404(BlogCategory, id=category_id)
+            category.delete()
+            django_messages.success(request, "Catégorie supprimée avec succès.")
+            return redirect('users:manage_categories')
+        else:
+            form = CategoryForm(request.POST)
+            if form.is_valid():
+                form.save()
+                django_messages.success(request, "Catégorie créée avec succès.")
+                return redirect('users:manage_categories')
+    else:
+        form = CategoryForm()
+
+    return render(request, 'users/manage_categories.html', {'categories': categories, 'form': form})
+
+@manager_required
+def edit_category(request, category_id):
+    category = get_object_or_404(BlogCategory, id=category_id)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Catégorie mise à jour avec succès.")
+            return redirect('users:manage_categories')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'users/edit_category.html', {'form': form, 'category': category})
 
 # Custom Password Reset View
-from django.contrib.auth.views import PasswordResetView
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.sites.shortcuts import get_current_site
 
 class CustomPasswordResetView(PasswordResetView):

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_ckeditor_5',
     'axes',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
