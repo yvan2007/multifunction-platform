@@ -104,7 +104,8 @@ def manager_login_view(request):
             entered_code = request.POST.get('2fa_code')
             if entered_code == request.session['2fa_code']:
                 user = CustomUser.objects.get(id=request.session['user_id'])
-                login(request, user)
+                # Specify the backend explicitly
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 django_messages.success(request, "Connexion réussie !")
                 del request.session['2fa_code']
                 del request.session['user_id']
@@ -369,6 +370,34 @@ def edit_category(request, category_id):
         form = CategoryForm(instance=category)
     return render(request, 'users/edit_category.html', {'form': form, 'category': category})
 
+@manager_required
+def manage_products(request):
+    products = Product.objects.all()
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            product_id = request.POST.get('product_id')
+            product = get_object_or_404(Product, id=product_id)
+            product.delete()
+            django_messages.success(request, "Produit supprimé avec succès.")
+            return redirect('users:manage_products')
+        # Add logic for creating/editing products here if needed
+    return render(request, 'users/manage_products.html', {'products': products})
+
+@manager_required
+def manage_orders(request):
+    orders = Order.objects.all()
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            order_id = request.POST.get('order_id')
+            order = get_object_or_404(Order, id=order_id)
+            order.delete()
+            django_messages.success(request, "Commande supprimée avec succès.")
+            return redirect('users:manage_orders')
+        # Add more actions (e.g., update status) here if needed
+    return render(request, 'users/manage_orders.html', {'orders': orders})
+
 # Custom Password Reset View
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.sites.shortcuts import get_current_site
@@ -422,3 +451,29 @@ class CustomPasswordResetView(PasswordResetView):
         }
         form.save(**opts)
         return super().form_valid(form)
+
+@manager_required
+def add_category(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Catégorie ajoutée avec succès.")
+            return redirect('users:manage_categories')
+    else:
+        form = CategoryForm()
+    return render(request, 'users/add_category.html', {'form': form})
+
+@manager_required
+def add_article(request):
+    if request.method == 'POST':
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.author = request.user  # Set the current manager as the author
+            article.save()
+            django_messages.success(request, "Article ajouté avec succès.")
+            return redirect('users:manage_articles')
+    else:
+        form = ArticleForm()
+    return render(request, 'users/add_article.html', {'form': form})

@@ -6,16 +6,16 @@ from blog.models import Article, BlogCategory
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
-    secret_code = forms.CharField(label="Code secret (pour gestionnaires)", max_length=10, required=False)
+    secret_code = forms.CharField(label="Code secret (pour gestionnaires)", max_length=36, required=False)  # Changé de 10 à 36
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Replace 'username' with 'login_field' in the form
         self.fields['username'] = self.fields.pop('login_field')
 
     def clean(self):
         login_field = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
+        secret_code = self.cleaned_data.get('secret_code')
 
         if login_field and password:
             self.user_cache = authenticate(self.request, username=login_field, password=password)
@@ -23,6 +23,11 @@ class CustomAuthenticationForm(AuthenticationForm):
                 raise forms.ValidationError("Nom d'utilisateur/email ou mot de passe incorrect.")
             elif not self.user_cache.is_active:
                 raise forms.ValidationError("Ce compte est inactif.")
+            # Vérification supplémentaire pour les managers
+            if self.user_cache.is_manager and not secret_code:
+                raise forms.ValidationError("Le code secret est requis pour les gestionnaires.")
+            if self.user_cache.is_manager and secret_code != self.user_cache.secret_code:
+                raise forms.ValidationError("Code secret incorrect.")
         return self.cleaned_data
 
 class CustomUserCreationForm(forms.ModelForm):
