@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block title %}Ajouter un article{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h2>Ajouter un article</h2>
-    <form method="post" class="card p-4">
+    <form method="post" class="card p-4" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-3">
             <label for="{{ form.title.id_for_label }}" class="form-label">Titre</label>
@@ -29,8 +30,33 @@
                 <div class="text-danger">{{ form.category.errors }}</div>
             {% endif %}
         </div>
+        <div class="mb-3">
+            <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+            {{ form.tags|add_class:"form-control" }}
+            {% if form.tags.errors %}
+                <div class="text-danger">{{ form.tags.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.status.id_for_label }}" class="form-label">Statut</label>
+            {{ form.status|add_class:"form-control" }}
+            {% if form.status.errors %}
+                <div class="text-danger">{{ form.status.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.image.id_for_label }}" class="form-label">Image de couverture</label>
+            {{ form.image|add_class:"form-control" }}
+            {% if form.image.errors %}
+                <div class="text-danger">{{ form.image.errors }}</div>
+            {% endif %}
+        </div>
         <button type="submit" class="btn btn-success">Ajouter</button>
         <a href="{% url 'users:manage_articles' %}" class="btn btn-secondary ms-2">Annuler</a>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media }}  <!-- Loads CKEditor 5 JavaScript -->
 {% endblock %}

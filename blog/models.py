@@ -23,7 +23,7 @@ class Article(models.Model):
     )
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
-    content = CKEditor5Field()
+    content = CKEditor5Field()  # Already using CKEditor5Field
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -39,6 +39,7 @@ class Article(models.Model):
         related_name='liked_articles',
         blank=True
     )
+    image = models.ImageField(upload_to='article_covers/', blank=True, null=True)  # Added this line
 
     def save(self, *args, **kwargs):
         if not self.slug:

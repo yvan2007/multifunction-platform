@@ -467,11 +467,12 @@ def add_category(request):
 @manager_required
 def add_article(request):
     if request.method == 'POST':
-        form = ArticleForm(request.POST)
+        form = ArticleForm(request.POST, request.FILES)  # Added request.FILES
         if form.is_valid():
             article = form.save(commit=False)
             article.author = request.user  # Set the current manager as the author
             article.save()
+            form.save_m2m()  # Save ManyToMany tags
             django_messages.success(request, "Article ajouté avec succès.")
             return redirect('users:manage_articles')
     else:

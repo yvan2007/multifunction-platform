@@ -3,6 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate
 from .models import CustomUser, UserProfile, Address
 from blog.models import Article, BlogCategory
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
@@ -90,13 +91,15 @@ class AddressForm(forms.ModelForm):
 class ArticleForm(forms.ModelForm):
     class Meta:
         model = Article
-        fields = ['title', 'content', 'category', 'tags', 'status']
+        fields = ['title', 'content', 'category', 'tags', 'status', 'image']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': CKEditor5Widget(attrs={'class': 'django_ckeditor_5'}),
             'content': forms.Textarea(attrs={'class': 'form-control'}),  # CKEditor5 handles its own widget
             'category': forms.Select(attrs={'class': 'form-control'}),
             'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
 class CategoryForm(forms.ModelForm):
