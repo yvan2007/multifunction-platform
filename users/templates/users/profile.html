@@ -19,24 +19,26 @@
 
         <!-- Liste des options -->
         <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="fas fa-heart me-2"></i> Favoris
-                </div>
-                <a href="{% url 'users:favorites' %}"><i class="fas fa-chevron-right"></i></a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="fas fa-envelope me-2"></i> Messagerie
-                </div>
-                <a href="{% url 'users:messages' %}"><i class="fas fa-chevron-right"></i></a>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="fas fa-shopping-cart me-2"></i> Vos commandes
-                </div>
-                <a href="{% url 'users:orders' %}"><i class="fas fa-chevron-right"></i></a>
-            </li>
+            {% if not user.is_manager %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-heart me-2"></i> Favoris
+                    </div>
+                    <a href="{% url 'users:favorites' %}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-envelope me-2"></i> Messagerie
+                    </div>
+                    <a href="{% url 'users:messages' %}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-shopping-cart me-2"></i> Vos commandes
+                    </div>
+                    <a href="{% url 'users:orders' %}"><i class="fas fa-chevron-right"></i></a>
+                </li>
+            {% endif %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <i class="fas fa-sign-out-alt me-2"></i> Déconnexion

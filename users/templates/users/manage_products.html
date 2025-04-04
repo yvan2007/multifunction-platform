@@ -1,10 +1,15 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+
 {% block title %}Gérer les Produits{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <h2 class="text-center">Gérer les Produits</h2>
+    <div class="d-flex gap-2 mb-3">
+        <a href="{% url 'users:add_product' %}" class="btn btn-success">Ajouter un produit</a>
+        <a href="{% url 'users:manager_dashboard' %}" class="btn btn-secondary">Retour au tableau de bord</a>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <table class="table table-striped">
@@ -20,7 +25,7 @@
                     {% for product in products %}
                     <tr>
                         <td>{{ product.name }}</td>
-                        <td>{{ product.price }}</td>
+                        <td>{{ product.price }} FCFA</td>
                         <td>{{ product.stock }}</td>
                         <td>
                             <form method="post" style="display:inline;">
@@ -41,9 +46,6 @@
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="text-center mt-3">
-        <a href="{% url 'users:manager_dashboard' %}" class="btn btn-secondary">Retour au tableau de bord</a>
     </div>
 </div>
 {% endblock %}

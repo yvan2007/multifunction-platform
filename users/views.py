@@ -10,7 +10,7 @@ from .models import CustomUser, UserProfile, Address, Favorite, Message
 from ecommerce.models import Product, Cart, CartItem
 from orders.models import Order
 from blog.models import Article, BlogCategory
-from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
+from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, ProductForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
 import random
 import string
 
@@ -61,8 +61,8 @@ def validate_login_credentials(request, form, is_manager_login=False):
 def login_view(request):
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('users:manager_dashboard')
-        return redirect('index')
+            return redirect('users:manager_dashboard')  # Managers go to dashboard
+        return redirect('index')  # Clients go to index
 
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -84,7 +84,7 @@ def login_view(request):
                 request.session.modified = True
             next_url = request.GET.get('next', 'index')
             django_messages.success(request, "Connexion réussie !")
-            return redirect(next_url)
+            return redirect(next_url if not user.is_manager else 'users:manager_dashboard')
     else:
         form = CustomAuthenticationForm()
 
@@ -94,17 +94,16 @@ def login_view(request):
 def manager_login_view(request):
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('users:manager_dashboard')
+            return redirect('users:manager_dashboard')  # Managers go to dashboard
         else:
             django_messages.error(request, "Vous n'êtes pas autorisé à accéder à cette page.")
-            return redirect('index')
+            return redirect('index')  # Clients redirected away
 
     if '2fa_code' in request.session:
         if request.method == 'POST':
             entered_code = request.POST.get('2fa_code')
             if entered_code == request.session['2fa_code']:
                 user = CustomUser.objects.get(id=request.session['user_id'])
-                # Specify the backend explicitly
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 django_messages.success(request, "Connexion réussie !")
                 del request.session['2fa_code']
@@ -280,7 +279,7 @@ def orders(request):
     return render(request, 'users/orders.html', {'orders': orders})
 
 # Manager Dashboard
-@manager_required
+manager_required
 def manager_dashboard(request):
     articles = Article.objects.all().count()
     categories = BlogCategory.objects.all().count()
@@ -478,3 +477,17 @@ def add_article(request):
     else:
         form = ArticleForm()
     return render(request, 'users/add_article.html', {'form': form})
+
+@manager_required
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.save()
+            form.save_m2m()  # Save ManyToMany tags
+            django_messages.success(request, "Produit ajouté avec succès.")
+            return redirect('users:manage_products')
+    else:
+        form = ProductForm()
+    return render(request, 'users/add_product.html', {'form': form})

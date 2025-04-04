@@ -60,6 +60,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'contact' %}">Contact</a>
                     </li>
+                    <!-- Bouton Tableau de bord pour les gestionnaires uniquement -->
+                    {% if user.is_authenticated and user.is_manager %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'users:manager_dashboard' %}">Tableau de bord</a>
+                        </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -75,15 +81,11 @@
                                     <i class="fas fa-user-circle fa-lg"></i> {{ user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                    {% if user.is_manager %}
-                                        <li><a class="dropdown-item" href="{% url 'users:manager_dashboard' %}">Tableau de bord</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'users:manage_articles' %}">Gérer les articles</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'users:manage_categories' %}">Gérer les catégories</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    {% endif %}
                                     <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profil</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'users:orders' %}">Mes commandes</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'users:favorites' %}">Favoris</a></li>
+                                    {% if not user.is_manager %}
+                                        <li><a class="dropdown-item" href="{% url 'users:orders' %}">Mes commandes</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'users:favorites' %}">Favoris</a></li>
+                                    {% endif %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'users:logout' %}">Déconnexion</a></li>
                                 </ul>
