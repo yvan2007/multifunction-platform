@@ -1,11 +1,13 @@
+# blog/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Article, BlogCategory, Comment
+from .models import Article, Comment
+from ecommerce.models import Category
 
 def blog(request):
-    articles = Article.objects.all()
-    categories = BlogCategory.objects.all()
+    articles = Article.objects.filter(status='published')  # Ne montrer que les articles publiés
+    categories = Category.objects.filter(category_type='blog')
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories})
 
 @login_required
@@ -65,14 +67,14 @@ def like_article(request, article_id):
     return redirect('blog:article_detail', slug=article.slug)
 
 def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug)
+    article = get_object_or_404(Article, slug=slug, status='published')  # Ne montrer que les articles publiés
     comments = article.comments.all()
     return render(request, 'blog/article_detail.html', {'article': article, 'comments': comments})
 
 def articles_by_category(request, category_id):
-    category = get_object_or_404(BlogCategory, id=category_id)
-    articles = Article.objects.filter(category=category)
-    categories = BlogCategory.objects.all()
+    category = get_object_or_404(Category, id=category_id, category_type='blog')
+    articles = Article.objects.filter(category=category, status='published')  # Ne montrer que les articles publiés
+    categories = Category.objects.filter(category_type='blog')
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories, 'selected_category': category})
 
 @login_required

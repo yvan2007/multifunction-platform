@@ -1,3 +1,4 @@
+# blog/api.py
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,13 @@ class ArticleViewSet(viewsets.ModelViewSet):
     queryset = Article.objects.filter(status='published')
     serializer_class = ArticleSerializer
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category_id = self.request.query_params.get('category')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        return queryset
 
     def retrieve(self, request, slug=None):
         try:

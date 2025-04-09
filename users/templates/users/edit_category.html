@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier la catégorie{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Modifier la catégorie : {{ category.name }}</h2>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulaire de modification -->
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Nom de la catégorie</label>
+            {{ form.name }}
+        </div>
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            {{ form.description }}
+        </div>
+        <div class="mb-3">
+            <label for="id_category_type" class="form-label">Type de catégorie</label>
+            {{ form.category_type }}
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{% url 'users:manage_categories' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

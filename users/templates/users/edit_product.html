@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier le produit{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Modifier le produit: {{ product.name }}</h2>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulaire de modification -->
+    <form method="post" enctype="multipart/form-data" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Nom du produit</label>
+            {{ form.name }}
+        </div>
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            {{ form.description }}
+        </div>
+        <div class="mb-3">
+            <label for="id_price" class="form-label">Prix (FCFA)</label>
+            {{ form.price }}
+        </div>
+        <div class="mb-3">
+            <label for="id_stock" class="form-label">Stock</label>
+            {{ form.stock }}
+        </div>
+        <div class="mb-3">
+            <label for="id_category" class="form-label">Catégorie</label>
+            {{ form.category }}
+        </div>
+        <div class="mb-3">
+            <label for="id_image" class="form-label">Image</label>
+            {{ form.image }}
+        </div>
+        <div class="mb-3 form-check">
+            {{ form.is_active }}
+            <label for="id_is_active" class="form-check-label">Produit actif</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+    </form>
+</div>
+{% endblock %}

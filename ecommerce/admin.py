@@ -1,4 +1,4 @@
-### ecommerce/admin.py (version corrigée)
+# ecommerce/admin.py
 from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, Review, Cart, CartItem, Order, OrderItem,
@@ -36,14 +36,14 @@ class CartItemAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'total_amount', 'status', 'created_at']  # Changé 'total_price' en 'total_amount'
+    list_display = ['id', 'user', 'total_amount', 'status', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'id']
     date_hierarchy = 'created_at'
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order', 'product', 'unit_price', 'quantity', 'total_price']  # Changé 'price' en 'unit_price'
+    list_display = ['id', 'order', 'product', 'unit_price', 'quantity', 'total_price']
     list_filter = ['order__status']
     search_fields = ['product__name']
 

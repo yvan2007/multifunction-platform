@@ -52,4 +52,5 @@ urlpatterns = [
     path('manage-orders/', views.manage_orders, name='manage_orders'),  # Added this line
     path('manage-categories/add/', views.add_category, name='add_category'),  # Added this line
     path('manage-articles/add/', views.add_article, name='add_article'),  # Added this line
+    path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
 ]

@@ -4,49 +4,129 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Tableau de bord du gestionnaire</h2>
+    <!-- Titre -->
+    <h2 class="text-center mb-4">Tableau de bord du gestionnaire</h2>
+
+    <!-- Messages -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         {% endfor %}
     {% endif %}
-    
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card">
+
+    <!-- Options de filtrage -->
+    <div class="mb-4 text-center">
+        <a href="?filter=newest" class="btn btn-outline-primary {% if filter_type == 'newest' %}active{% endif %}">Nouveaux ajouts</a>
+        <a href="?filter=alpha" class="btn btn-outline-primary {% if filter_type == 'alpha' %}active{% endif %}">Ordre alphabétique</a>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-5">
+        <!-- Articles -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-center shadow-sm">
                 <div class="card-body">
+                    <i class="fas fa-newspaper fa-3x text-primary mb-3"></i>
                     <h5 class="card-title">Articles</h5>
-                    <p class="card-text">{{ article_count }} articles</p>
+                    <p class="card-text display-4">{{ article_count }}</p>
                     <a href="{% url 'users:manage_articles' %}" class="btn btn-primary">Gérer</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
+        <!-- Catégories -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-center shadow-sm">
                 <div class="card-body">
+                    <i class="fas fa-folder fa-3x text-success mb-3"></i>
                     <h5 class="card-title">Catégories</h5>
-                    <p class="card-text">{{ category_count }} catégories</p>
-                    <a href="{% url 'users:manage_categories' %}" class="btn btn-primary">Gérer</a>
+                    <p class="card-text display-4">{{ category_count }}</p>
+                    <a href="{% url 'users:manage_categories' %}" class="btn btn-success">Gérer</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
+        <!-- Produits -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-center shadow-sm">
                 <div class="card-body">
+                    <i class="fas fa-box fa-3x text-warning mb-3"></i>
                     <h5 class="card-title">Produits</h5>
-                    <p class="card-text">{{ product_count }} produits</p>
-                    <a href="{% url 'users:manage_products' %}" class="btn btn-primary">Gérer</a>
+                    <p class="card-text display-4">{{ product_count }}</p>
+                    <a href="{% url 'users:manage_products' %}" class="btn btn-warning">Gérer</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
+        <!-- Commandes -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-center shadow-sm">
                 <div class="card-body">
+                    <i class="fas fa-shopping-cart fa-3x text-danger mb-3"></i>
                     <h5 class="card-title">Commandes</h5>
-                    <p class="card-text">{{ order_count }} commandes</p>
-                    <a href="{% url 'users:manage_orders' %}" class="btn btn-primary">Gérer</a>
+                    <p class="card-text display-4">{{ order_count }}</p>
+                    <a href="{% url 'users:manage_orders' %}" class="btn btn-danger">Gérer</a>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Sections détaillées -->
+    <div class="row">
+        <!-- Catégories récentes -->
+        <div class="col-md-3 mb-4 recent-section">
+            <h3>Catégories récentes</h3>
+            {% for category in recent_categories %}
+            <div class="card">
+                <div class="card-body">
+                    <p>{{ category.name }} (Ajoutée le {{ category.created_at|date:"d M Y" }})</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Aucune catégorie récente.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Articles récents -->
+        <div class="col-md-3 mb-4 recent-section">
+            <h3>Articles récents</h3>
+            {% for article in recent_articles %}
+            <div class="card">
+                <div class="card-body">
+                    <p>{{ article.title }} (Créé le {{ article.created_at|date:"d M Y" }})</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Aucun article récent.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Produits récents -->
+        <div class="col-md-3 mb-4 recent-section">
+            <h3>Produits récents</h3>
+            {% for product in recent_products %}
+            <div class="card">
+                <div class="card-body">
+                    <p>{{ product.name }} (Ajouté le {{ product.created_at|date:"d M Y" }})</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Aucun produit récent.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Commandes récentes -->
+        <div class="col-md-3 mb-4 recent-section">
+            <h3>Commandes récentes</h3>
+            {% for order in recent_orders %}
+            <div class="card">
+                <div class="card-body">
+                    <p>Commande #{{ order.id }} par {{ order.user.username }} ({{ order.created_at|date:"d M Y" }})</p>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">Aucune commande récente.</p>
+            {% endfor %}
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-### multifunction_platform/views.py
+# multifunction_platform/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
@@ -7,7 +7,7 @@ from django.urls import reverse
 from multifunction_platform.forms import CustomAuthenticationForm
 from users.models import CustomUser
 from ecommerce.models import Product, Cart, CartItem, Order, OrderItem, Payment, Review, Testimonial, ProductImage, Category, NewsletterSubscription, Tag
-from blog.models import Article, BlogCategory, Comment
+from blog.models import Article, Comment  # Importer uniquement Article et Comment
 import random
 import string
 from django.core.mail import send_mail
@@ -337,7 +337,7 @@ def manager_dashboard(request):
             title = request.POST.get('title')
             content = request.POST.get('content')
             category_id = request.POST.get('category')
-            category = BlogCategory.objects.get(id=category_id)
+            category = Category.objects.get(id=category_id)
             slug = title.lower().replace(' ', '-')
             Article.objects.create(title=title, content=content, category=category, author=request.user, slug=slug, status='published')
             messages.success(request, "Article ajouté avec succès.")
@@ -368,8 +368,8 @@ def manager_dashboard(request):
         
         return redirect('manager_dashboard')
 
-    categories = Category.objects.all()
-    blog_categories = BlogCategory.objects.all()
+    categories = Category.objects.filter(category_type='product')  # Catégories pour les produits
+    blog_categories = Category.objects.filter(category_type='blog')  # Catégories pour les blogs
     return render(request, 'manager_dashboard.html', {
         'products': products,
         'articles': articles,
@@ -383,7 +383,7 @@ def manager_dashboard(request):
 @user_passes_test(is_manager)
 def manage_categories(request):
     product_categories = Category.objects.filter(category_type='product')
-    blog_categories = BlogCategory.objects.all()
+    blog_categories = Category.objects.filter(category_type='blog')  # Filtrer par category_type='blog'
     return render(request, 'manage_categories.html', {'product_categories': product_categories, 'blog_categories': blog_categories})
 
 @login_required
@@ -393,7 +393,9 @@ def add_product_category(request):
         from .forms import ProductCategoryForm
         form = ProductCategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            category = form.save(commit=False)
+            category.category_type = 'product'  # Définir le type de catégorie
+            category.save()
             messages.success(request, "Catégorie de produit ajoutée avec succès !")
             return redirect('manage_categories')
     else:
@@ -408,7 +410,9 @@ def add_blog_category(request):
         from .forms import BlogCategoryForm
         form = BlogCategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            category = form.save(commit=False)
+            category.category_type = 'blog'  # Définir le type de catégorie
+            category.save()
             messages.success(request, "Catégorie de blog ajoutée avec succès !")
             return redirect('manage_categories')
     else:
@@ -427,7 +431,7 @@ def delete_product_category(request, category_id):
 @login_required
 @user_passes_test(is_manager)
 def delete_blog_category(request, category_id):
-    category = get_object_or_404(BlogCategory, id=category_id)
+    category = get_object_or_404(Category, id=category_id, category_type='blog')  # Filtrer par category_type='blog'
     category.delete()
     messages.success(request, "Catégorie de blog supprimée avec succès !")
     return redirect('manage_categories')
@@ -494,7 +498,7 @@ def cart_detail(request):
 # Vues pour Blog
 def blog(request):
     articles = Article.objects.all()
-    categories = BlogCategory.objects.all()
+    categories = Category.objects.filter(category_type='blog')  # Filtrer par category_type='blog'
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories})
 
 @login_required
@@ -559,9 +563,9 @@ def article_detail(request, slug):
     return render(request, 'blog/article_detail.html', {'article': article, 'comments': comments})
 
 def articles_by_category(request, category_id):
-    category = get_object_or_404(BlogCategory, id=category_id)
+    category = get_object_or_404(Category, id=category_id, category_type='blog')  # Filtrer par category_type='blog'
     articles = Article.objects.filter(category=category)
-    categories = BlogCategory.objects.all()
+    categories = Category.objects.filter(category_type='blog')  # Filtrer par category_type='blog'
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories, 'selected_category': category})
 
 @login_required

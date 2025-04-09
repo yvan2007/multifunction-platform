@@ -1,51 +1,89 @@
-{% extends 'base.html' %}
-{% load widget_tweaks %}
+{% extends "base.html" %}
 
-{% block title %}Gérer les Produits{% endblock %}
+{% block title %}Gérer les produits{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center">Gérer les Produits</h2>
-    <div class="d-flex gap-2 mb-3">
-        <a href="{% url 'users:add_product' %}" class="btn btn-success">Ajouter un produit</a>
-        <a href="{% url 'users:manager_dashboard' %}" class="btn btn-secondary">Retour au tableau de bord</a>
+<div class="container mt-4">
+    <h2>Gérer les produits</h2>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Options de filtrage -->
+    <div class="mb-4 text-center">
+        <a href="?filter=newest" class="btn btn-outline-primary {% if filter_type == 'newest' %}active{% endif %}">Nouveaux ajouts</a>
+        <a href="?filter=alpha" class="btn btn-outline-primary {% if filter_type == 'alpha' %}active{% endif %}">Ordre alphabétique</a>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Prix</th>
-                        <th>Stock</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in products %}
-                    <tr>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.price }} FCFA</td>
-                        <td>{{ product.stock }}</td>
-                        <td>
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="product_id" value="{{ product.id }}">
-                                <button type="submit" name="delete" class="btn btn-danger btn-sm" 
-                                        onclick="return confirm('Voulez-vous vraiment supprimer ce produit ?');">
-                                    Supprimer
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center">Aucun produit disponible.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <!-- Champ de recherche -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Rechercher un produit..." value="{{ request.GET.search }}">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
         </div>
-    </div>
+    </form>
+
+    <!-- Formulaire d'ajout -->
+    <form method="post" enctype="multipart/form-data" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Nom du produit</label>
+            {{ form.name }}
+        </div>
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            {{ form.description }}
+        </div>
+        <div class="mb-3">
+            <label for="id_price" class="form-label">Prix (FCFA)</label>
+            {{ form.price }}
+        </div>
+        <div class="mb-3">
+            <label for="id_stock" class="form-label">Stock</label>
+            {{ form.stock }}
+        </div>
+        <div class="mb-3">
+            <label for="id_category" class="form-label">Catégorie</label>
+            {{ form.category }}
+        </div>
+        <div class="mb-3">
+            <label for="id_image" class="form-label">Image</label>
+            {{ form.image }}
+        </div>
+        <div class="mb-3 form-check">
+            {{ form.is_active }}
+            <label for="id_is_active" class="form-check-label">Produit actif</label>
+        </div>
+        <button type="submit" class="btn btn-success">Ajouter</button>
+    </form>
+
+    <!-- Liste des produits -->
+    <h3>Produits existants</h3>
+    {% if products %}
+        <ul class="list-group">
+            {% for product in products %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ product.name }} (Prix: {{ product.price }} FCFA, Stock: {{ product.stock }}, Ajouté le {{ product.created_at|date:"d M Y" }})
+                    <div>
+                        <a href="{% url 'users:edit_product' product.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                        <form method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <button type="submit" name="delete" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Aucun produit disponible.</p>
+    {% endif %}
 </div>
 {% endblock %}

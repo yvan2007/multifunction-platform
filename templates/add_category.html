@@ -1,19 +1,31 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load widget_tweaks %}
 
-{% block title %}Ajouter une catégorie - Portfolio Multifonction{% endblock %}
+{% block title %}Ajouter une catégorie{% endblock %}
 
 {% block content %}
-<section class="add_category_section layout_padding">
-    <div class="container">
-        <h2 class="section-title">Ajouter une catégorie {% if type == 'product' %}de produit{% else %}de blog{% endif %}</h2>
-        <form method="post" class="portfolio-item" data-aos="fade-up">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="name">Nom de la catégorie</label>
-                <input type="text" name="name" id="name" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Ajouter</button>
-        </form>
-    </div>
-</section>
+<div class="container mt-5">
+    <h2 class="text-center">Ajouter une catégorie</h2>
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ form.name.id_for_label }}" class="form-label"><i class="fas fa-tag"></i> Nom</label>
+            {{ form.name|add_class:"form-control" }}
+            {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label"><i class="fas fa-align-left"></i> Description</label>
+            {{ form.description|add_class:"form-control" }}
+            {% if form.description.errors %}
+                <div class="text-danger">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="d-flex justify-content-center gap-2">
+            <button type="submit" class="btn btn-success">Ajouter</button>
+            <a href="{% url 'users:manage_categories' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

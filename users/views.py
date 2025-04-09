@@ -1,3 +1,4 @@
+# users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -6,25 +7,36 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
 from django.contrib import messages as django_messages
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+
+# Import des modèles
 from .models import CustomUser, UserProfile, Address, Favorite, Message
-from ecommerce.models import Product, Cart, CartItem
+from ecommerce.models import Category, Product, Cart, CartItem
 from orders.models import Order
-from blog.models import Article, BlogCategory
-from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, ProductForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
+from blog.models import Article
+
+# Import des formulaires
+from .forms import (
+    CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm,
+    ProductForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
+)
+
 import random
 import string
 
-# Utility function to check if user is a manager
+# ------------------- Fonctions utilitaires -------------------
+
 def is_manager(user):
+    """Vérifie si l'utilisateur est un gestionnaire."""
     return user.is_authenticated and user.is_manager
 
-# Custom decorator for manager-only access
 def manager_required(view_func):
-    decorated_view_func = login_required(user_passes_test(is_manager)(view_func))
-    return decorated_view_func
+    """Décorateur pour restreindre l'accès aux gestionnaires uniquement."""
+    return login_required(user_passes_test(is_manager)(view_func))
 
-# Utility function to validate login credentials
 def validate_login_credentials(request, form, is_manager_login=False):
+    """Valide les identifiants de connexion."""
     if not form.is_valid():
         django_messages.error(request, "Erreur lors de la connexion. Veuillez vérifier les champs.")
         return None, None
@@ -57,12 +69,14 @@ def validate_login_credentials(request, form, is_manager_login=False):
 
     return user, password
 
-# Login view for regular users (clients)
+# ------------------- Vues pour l'authentification -------------------
+
 def login_view(request):
+    """Connexion pour les utilisateurs réguliers (clients)."""
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('users:manager_dashboard')  # Managers go to dashboard
-        return redirect('index')  # Clients go to index
+            return redirect('users:manager_dashboard')
+        return redirect('index')
 
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -90,14 +104,14 @@ def login_view(request):
 
     return render(request, 'users/login.html', {'form': form})
 
-# Login view for managers (with 2FA)
 def manager_login_view(request):
+    """Connexion pour les gestionnaires avec 2FA."""
     if request.user.is_authenticated:
         if request.user.is_manager:
-            return redirect('users:manager_dashboard')  # Managers go to dashboard
+            return redirect('users:manager_dashboard')
         else:
             django_messages.error(request, "Vous n'êtes pas autorisé à accéder à cette page.")
-            return redirect('index')  # Clients redirected away
+            return redirect('index')
 
     if '2fa_code' in request.session:
         if request.method == 'POST':
@@ -148,8 +162,8 @@ def manager_login_view(request):
 
     return render(request, 'users/manager_login.html', {'form': form})
 
-# Registration view
 def register(request):
+    """Inscription pour les utilisateurs (clients ou gestionnaires)."""
     user_type = request.GET.get('user_type', 'client')
     
     if user_type == 'manager':
@@ -158,7 +172,7 @@ def register(request):
             if form.is_valid():
                 user = form.save(commit=False)
                 user.is_manager = True
-                user.generate_secret_code()  # Méthode supposée dans CustomUser pour générer un code secret
+                user.generate_secret_code()  # Méthode supposée dans CustomUser
                 user.save()
                 try:
                     send_mail(
@@ -198,210 +212,8 @@ def register(request):
 
     return render(request, 'users/register.html', {'form': form, 'user_type': user_type})
 
-# Profile view
-@login_required
-def profile(request):
-    return render(request, 'users/profile.html', {'user': request.user})
-
-# Edit profile view
-@login_required
-def edit_profile(request):
-    if request.method == 'POST':
-        user = request.user
-        user.first_name = request.POST.get('first_name')
-        user.last_name = request.POST.get('last_name')
-        user.email = request.POST.get('email')
-        user.username = request.POST.get('username')
-        user.save()
-        django_messages.success(request, 'Profil mis à jour avec succès.')
-        return redirect('users:profile')
-    return render(request, 'users/edit_profile.html', {'user': request.user})
-
-# Account settings view
-@login_required
-def account_settings(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    addresses = request.user.addresses.all()
-
-    if request.method == 'POST':
-        profile_form = UserProfileForm(request.POST, instance=profile)
-        address_form = AddressForm(request.POST)
-        if profile_form.is_valid():
-            profile_form.save()
-            django_messages.success(request, "Profil mis à jour avec succès !")
-        if address_form.is_valid():
-            address = address_form.save(commit=False)
-            address.user = request.user
-            address.save()
-            django_messages.success(request, "Adresse ajoutée avec succès !")
-        return redirect('users:account_settings')
-    else:
-        profile_form = UserProfileForm(instance=profile)
-        address_form = AddressForm()
-
-    return render(request, 'users/account_settings.html', {
-        'profile_form': profile_form,
-        'address_form': address_form,
-        'addresses': addresses,
-    })
-
-# Favorites view
-@login_required
-def favorites(request):
-    favorites = request.user.favorites.all()
-    if request.method == 'POST':
-        product_id = request.POST.get('product_id')
-        action = request.POST.get('action')
-        product = get_object_or_404(Product, id=product_id)
-        if action == 'add':
-            Favorite.objects.get_or_create(user=request.user, product=product)
-            django_messages.success(request, f"{product.name} ajouté aux favoris !")
-        elif action == 'remove':
-            Favorite.objects.filter(user=request.user, product=product).delete()
-            django_messages.success(request, f"{product.name} retiré des favoris !")
-        return redirect('users:favorites')
-    return render(request, 'users/favorites.html', {'favorites': favorites})
-
-# Messages view
-@login_required
-def user_messages(request): 
-    sent_messages = request.user.sent_messages.all()
-    received_messages = request.user.received_messages.all()
-    return render(request, 'users/messages.html', {
-        'sent_messages': sent_messages,
-        'received_messages': received_messages,
-    })
-
-# Orders view
-@login_required
-def orders(request):
-    orders = Order.objects.filter(user=request.user)
-    return render(request, 'users/orders.html', {'orders': orders})
-
-# Manager Dashboard
-manager_required
-def manager_dashboard(request):
-    articles = Article.objects.all().count()
-    categories = BlogCategory.objects.all().count()
-    products = Product.objects.all().count()
-    orders = Order.objects.all().count()
-    
-    context = {
-        'article_count': articles,
-        'category_count': categories,
-        'product_count': products,
-        'order_count': orders,
-    }
-    return render(request, 'users/manager_dashboard.html', context)
-
-# Manage Articles with CRUD
-@manager_required
-def manage_articles(request):
-    articles = Article.objects.all()
-    
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            article_id = request.POST.get('article_id')
-            article = get_object_or_404(Article, id=article_id)
-            article.delete()
-            django_messages.success(request, "Article supprimé avec succès.")
-            return redirect('users:manage_articles')
-        else:
-            form = ArticleForm(request.POST)
-            if form.is_valid():
-                article = form.save(commit=False)
-                article.author = request.user
-                article.save()
-                form.save_m2m()  # Save tags
-                django_messages.success(request, "Article créé avec succès.")
-                return redirect('users:manage_articles')
-    else:
-        form = ArticleForm()
-
-    return render(request, 'users/manage_articles.html', {'articles': articles, 'form': form})
-
-@manager_required
-def edit_article(request, article_id):
-    article = get_object_or_404(Article, id=article_id)
-    if request.method == 'POST':
-        form = ArticleForm(request.POST, instance=article)
-        if form.is_valid():
-            form.save()
-            django_messages.success(request, "Article mis à jour avec succès.")
-            return redirect('users:manage_articles')
-    else:
-        form = ArticleForm(instance=article)
-    return render(request, 'users/edit_article.html', {'form': form, 'article': article})
-
-# Manage Categories with CRUD
-@manager_required
-def manage_categories(request):
-    categories = BlogCategory.objects.all()
-    
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            category_id = request.POST.get('category_id')
-            category = get_object_or_404(BlogCategory, id=category_id)
-            category.delete()
-            django_messages.success(request, "Catégorie supprimée avec succès.")
-            return redirect('users:manage_categories')
-        else:
-            form = CategoryForm(request.POST)
-            if form.is_valid():
-                form.save()
-                django_messages.success(request, "Catégorie créée avec succès.")
-                return redirect('users:manage_categories')
-    else:
-        form = CategoryForm()
-
-    return render(request, 'users/manage_categories.html', {'categories': categories, 'form': form})
-
-@manager_required
-def edit_category(request, category_id):
-    category = get_object_or_404(BlogCategory, id=category_id)
-    if request.method == 'POST':
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
-            django_messages.success(request, "Catégorie mise à jour avec succès.")
-            return redirect('users:manage_categories')
-    else:
-        form = CategoryForm(instance=category)
-    return render(request, 'users/edit_category.html', {'form': form, 'category': category})
-
-@manager_required
-def manage_products(request):
-    products = Product.objects.all()
-    
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            product_id = request.POST.get('product_id')
-            product = get_object_or_404(Product, id=product_id)
-            product.delete()
-            django_messages.success(request, "Produit supprimé avec succès.")
-            return redirect('users:manage_products')
-        # Add logic for creating/editing products here if needed
-    return render(request, 'users/manage_products.html', {'products': products})
-
-@manager_required
-def manage_orders(request):
-    orders = Order.objects.all()
-    
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            order_id = request.POST.get('order_id')
-            order = get_object_or_404(Order, id=order_id)
-            order.delete()
-            django_messages.success(request, "Commande supprimée avec succès.")
-            return redirect('users:manage_orders')
-        # Add more actions (e.g., update status) here if needed
-    return render(request, 'users/manage_orders.html', {'orders': orders})
-
-# Custom Password Reset View
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from django.contrib.sites.shortcuts import get_current_site
-
 class CustomPasswordResetView(PasswordResetView):
+    """Vue personnalisée pour la réinitialisation du mot de passe."""
     template_name = 'users/password_reset.html'
     email_template_name = 'registration/password_reset_email.html'
     subject_template_name = 'registration/password_reset_subject.txt'
@@ -451,27 +263,163 @@ class CustomPasswordResetView(PasswordResetView):
         form.save(**opts)
         return super().form_valid(form)
 
-@manager_required
-def add_category(request):
+# ------------------- Vues pour les utilisateurs -------------------
+
+@login_required
+def profile(request):
+    """Afficher le profil de l'utilisateur."""
+    return render(request, 'users/profile.html', {'user': request.user})
+
+@login_required
+def edit_profile(request):
+    """Modifier le profil de l'utilisateur."""
     if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            django_messages.success(request, "Catégorie ajoutée avec succès.")
-            return redirect('users:manage_categories')
+        user = request.user
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
+        user.username = request.POST.get('username')
+        user.save()
+        django_messages.success(request, 'Profil mis à jour avec succès.')
+        return redirect('users:profile')
+    return render(request, 'users/edit_profile.html', {'user': request.user})
+
+@login_required
+def account_settings(request):
+    """Gérer les paramètres du compte (profil et adresses)."""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    addresses = request.user.addresses.all()
+
+    if request.method == 'POST':
+        profile_form = UserProfileForm(request.POST, instance=profile)
+        address_form = AddressForm(request.POST)
+        if profile_form.is_valid():
+            profile_form.save()
+            django_messages.success(request, "Profil mis à jour avec succès !")
+        if address_form.is_valid():
+            address = address_form.save(commit=False)
+            address.user = request.user
+            address.save()
+            django_messages.success(request, "Adresse ajoutée avec succès !")
+        return redirect('users:account_settings')
     else:
-        form = CategoryForm()
-    return render(request, 'users/add_category.html', {'form': form})
+        profile_form = UserProfileForm(instance=profile)
+        address_form = AddressForm()
+
+    return render(request, 'users/account_settings.html', {
+        'profile_form': profile_form,
+        'address_form': address_form,
+        'addresses': addresses,
+    })
+
+@login_required
+def favorites(request):
+    """Gérer les favoris de l'utilisateur."""
+    favorites = request.user.favorites.all()
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        action = request.POST.get('action')
+        product = get_object_or_404(Product, id=product_id)
+        if action == 'add':
+            Favorite.objects.get_or_create(user=request.user, product=product)
+            django_messages.success(request, f"{product.name} ajouté aux favoris !")
+        elif action == 'remove':
+            Favorite.objects.filter(user=request.user, product=product).delete()
+            django_messages.success(request, f"{product.name} retiré des favoris !")
+        return redirect('users:favorites')
+    return render(request, 'users/favorites.html', {'favorites': favorites})
+
+@login_required
+def user_messages(request):
+    """Afficher les messages envoyés et reçus par l'utilisateur."""
+    sent_messages = request.user.sent_messages.all()
+    received_messages = request.user.received_messages.all()
+    return render(request, 'users/messages.html', {
+        'sent_messages': sent_messages,
+        'received_messages': received_messages,
+    })
+
+@login_required
+def orders(request):
+    """Afficher les commandes de l'utilisateur."""
+    orders = Order.objects.filter(user=request.user)
+    return render(request, 'users/orders.html', {'orders': orders})
+
+# ------------------- Vues pour les gestionnaires -------------------
+
+@manager_required
+def manager_dashboard(request):
+    """Tableau de bord des gestionnaires."""
+    filter_type = request.GET.get('filter', 'newest')
+
+    article_count = Article.objects.filter(status='published').count()  # Compter uniquement les articles publiés
+    category_count = Category.objects.filter(category_type='product', is_active=True).count()
+    product_count = Product.objects.filter(is_active=True).count()
+    order_count = Order.objects.count()
+
+    if filter_type == 'alpha':
+        recent_articles = Article.objects.filter(status='published').order_by('title')[:5]
+        recent_products = Product.objects.filter(is_active=True).order_by('name')[:5]
+        recent_orders = Order.objects.select_related('user').order_by('user__username')[:5]
+        recent_categories = Category.objects.filter(category_type='product', is_active=True).order_by('name')[:5]
+    else:
+        recent_articles = Article.objects.filter(status='published').order_by('-created_at')[:5]
+        recent_products = Product.objects.filter(is_active=True).order_by('-created_at')[:5]
+        recent_orders = Order.objects.all().order_by('-created_at')[:5]
+        recent_categories = Category.objects.filter(category_type='product', is_active=True).order_by('-created_at')[:5]
+
+    context = {
+        'article_count': article_count,
+        'category_count': category_count,
+        'product_count': product_count,
+        'order_count': order_count,
+        'recent_articles': recent_articles,
+        'recent_products': recent_products,
+        'recent_orders': recent_orders,
+        'recent_categories': recent_categories,
+        'filter_type': filter_type,
+    }
+    return render(request, 'users/manager_dashboard.html', context)
+
+# Gestion des articles
+@manager_required
+def manage_articles(request):
+    """Gérer les articles (CRUD)."""
+    articles = Article.objects.all()
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            article_id = request.POST.get('article_id')
+            article = get_object_or_404(Article, id=article_id)
+            article.delete()
+            django_messages.success(request, "Article supprimé avec succès.")
+            return redirect('users:manage_articles')
+        else:
+            form = ArticleForm(request.POST, request.FILES)
+            if form.is_valid():
+                article = form.save(commit=False)
+                article.author = request.user
+                article.status = 'published'  # Définir comme publié par défaut
+                article.save()
+                form.save_m2m()
+                django_messages.success(request, "Article créé avec succès.")
+                return redirect('users:manage_articles')
+    else:
+        form = ArticleForm()
+
+    return render(request, 'users/manage_articles.html', {'articles': articles, 'form': form})
 
 @manager_required
 def add_article(request):
+    """Ajouter un nouvel article."""
     if request.method == 'POST':
-        form = ArticleForm(request.POST, request.FILES)  # Added request.FILES
+        form = ArticleForm(request.POST, request.FILES)
         if form.is_valid():
             article = form.save(commit=False)
-            article.author = request.user  # Set the current manager as the author
+            article.author = request.user
+            article.status = 'published'  # Définir comme publié par défaut
             article.save()
-            form.save_m2m()  # Save ManyToMany tags
+            form.save_m2m()
             django_messages.success(request, "Article ajouté avec succès.")
             return redirect('users:manage_articles')
     else:
@@ -479,15 +427,170 @@ def add_article(request):
     return render(request, 'users/add_article.html', {'form': form})
 
 @manager_required
+def edit_article(request, article_id):
+    """Modifier un article existant."""
+    article = get_object_or_404(Article, id=article_id)
+    if request.method == 'POST':
+        form = ArticleForm(request.POST, request.FILES, instance=article)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Article mis à jour avec succès.")
+            return redirect('users:manage_articles')
+    else:
+        form = ArticleForm(instance=article)
+    return render(request, 'users/edit_article.html', {'form': form, 'article': article})
+
+# Gestion des catégories
+@manager_required
+def manage_categories(request):
+    """Gérer les catégories (CRUD)."""
+    filter_type = request.GET.get('filter', 'newest')
+    search_query = request.GET.get('search', '')
+
+    categories = Category.objects.filter(category_type='product', is_active=True)
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+
+    if filter_type == 'alpha':
+        categories = categories.order_by('name')
+    else:
+        categories = categories.order_by('-created_at')
+
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            category_id = request.POST.get('category_id')
+            category = get_object_or_404(Category, id=category_id)
+            category.delete()
+            django_messages.success(request, "Catégorie supprimée avec succès.")
+            return redirect('users:manage_categories')
+        else:
+            form = CategoryForm(request.POST)
+            if form.is_valid():
+                category = form.save(commit=False)
+                category.is_active = True  # S'assurer que la catégorie est active
+                category.save()
+                django_messages.success(request, "Catégorie créée avec succès.")
+                return redirect('users:manage_categories')
+    else:
+        form = CategoryForm()
+
+    return render(request, 'users/manage_categories.html', {
+        'categories': categories,
+        'form': form,
+        'filter_type': filter_type,
+    })
+
+@manager_required
+def add_category(request):
+    """Ajouter une nouvelle catégorie."""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.is_active = True  # S'assurer que la catégorie est active
+            category.save()
+            django_messages.success(request, "Catégorie ajoutée avec succès.")
+            return redirect('users:manage_categories')
+    else:
+        form = CategoryForm()
+    return render(request, 'users/add_category.html', {'form': form})
+
+@manager_required
+def edit_category(request, category_id):
+    """Modifier une catégorie existante."""
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Catégorie mise à jour avec succès.")
+            return redirect('users:manage_categories')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'users/edit_category.html', {'form': form, 'category': category})
+
+# Gestion des produits
+@manager_required
+def manage_products(request):
+    """Gérer les produits (CRUD)."""
+    filter_type = request.GET.get('filter', 'newest')
+    search_query = request.GET.get('search', '')
+
+    products = Product.objects.filter(is_active=True)
+    if search_query:
+        products = products.filter(name__icontains=search_query)
+
+    if filter_type == 'alpha':
+        products = products.order_by('name')
+    else:
+        products = products.order_by('-created_at')
+
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            product_id = request.POST.get('product_id')
+            product = get_object_or_404(Product, id=product_id)
+            product.delete()
+            django_messages.success(request, "Produit supprimé avec succès.")
+            return redirect('users:manage_products')
+        else:
+            form = ProductForm(request.POST, request.FILES)
+            if form.is_valid():
+                product = form.save(commit=False)
+                product.is_active = True  # S'assurer que le produit est actif
+                product.save()
+                form.save_m2m()
+                django_messages.success(request, "Produit créé avec succès.")
+                return redirect('users:manage_products')
+    else:
+        form = ProductForm()
+
+    return render(request, 'users/manage_products.html', {
+        'products': products,
+        'form': form,
+        'filter_type': filter_type,
+    })
+
+@manager_required
 def add_product(request):
+    """Ajouter un nouveau produit."""
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
+            product.is_active = True  # S'assurer que le produit est actif
             product.save()
-            form.save_m2m()  # Save ManyToMany tags
+            form.save_m2m()
             django_messages.success(request, "Produit ajouté avec succès.")
             return redirect('users:manage_products')
     else:
         form = ProductForm()
     return render(request, 'users/add_product.html', {'form': form})
+
+@manager_required
+def edit_product(request, product_id):
+    """Modifier un produit existant."""
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, "Produit mis à jour avec succès.")
+            return redirect('users:manage_products')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'users/edit_product.html', {'form': form, 'product': product})
+
+# Gestion des commandes
+@manager_required
+def manage_orders(request):
+    """Gérer les commandes (CRUD)."""
+    orders = Order.objects.all()
+    
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            order_id = request.POST.get('order_id')
+            order = get_object_or_404(Order, id=order_id)
+            order.delete()
+            django_messages.success(request, "Commande supprimée avec succès.")
+            return redirect('users:manage_orders')
+    return render(request, 'users/manage_orders.html', {'orders': orders})

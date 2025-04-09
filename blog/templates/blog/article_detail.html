@@ -1,26 +1,52 @@
+<!-- templates/blog/article_detail.html -->
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ article.title }}{% endblock %}
+
 {% block content %}
-<section class="product_section layout_padding">
+<section class="article-section layout_padding">
     <div class="container">
         <div class="heading_container heading_center">
             <h2>{{ article.title }}</h2>
+            <p>Par {{ article.author.username }} - {{ article.created_at|date:"d M Y" }}</p>
         </div>
         <div class="row">
             <div class="col-12">
-                <p>{{ article.content|safe }}</p>
-                <p>Par {{ article.author.username }} - {{ article.created_at }}</p>
-                <a href="{% url 'like_article' article.pk %}">
-                    {% if user in article.likes.all %}Unlike{% else %}Like{% endif %}
-                </a> ({{ article.likes.count }} likes)
-                <h2>Commentaires</h2>
-                <ul>
-                    {% for comment in comments %}
-                    <li>{{ comment.user.username }} : {{ comment.content }}</li>
-                    {% endfor %}
-                </ul>
-                <a href="{% url 'add_comment' article.pk %}" class="btn1">Ajouter un commentaire</a>
+                {% if article.image %}
+                    <img src="{{ article.image.url }}" alt="{{ article.title }}" class="img-fluid mb-3" style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+                <div class="article-content">
+                    {{ article.content|safe }}
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'blog:like_article' article.id %}" class="btn btn-outline-primary">
+                        {% if user in article.likes.all %}
+                            Retirer des favoris
+                        {% else %}
+                            Ajouter aux favoris
+                        {% endif %}
+                    </a>
+                    <span>({{ article.likes.count }} likes)</span>
+                </div>
+                <h3 class="mt-4">Commentaires</h3>
+                {% if comments %}
+                    <ul class="list-unstyled">
+                        {% for comment in comments %}
+                            <li class="border-bottom py-2">
+                                <strong>{{ comment.user.username }}</strong> - {{ comment.created_at|date:"d M Y H:i" }}
+                                <p>{{ comment.content }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Aucun commentaire pour le moment.</p>
+                {% endif %}
+                {% if user.is_authenticated %}
+                    <a href="{% url 'blog:add_comment' article.id %}" class="btn btn-primary mt-3">Ajouter un commentaire</a>
+                {% else %}
+                    <p><a href="{% url 'users:login' %}">Connectez-vous</a> pour ajouter un commentaire.</p>
+                {% endif %}
             </div>
         </div>
     </div>

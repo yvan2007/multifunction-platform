@@ -2,12 +2,12 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate
 from .models import CustomUser, UserProfile, Address
-from blog.models import Article, BlogCategory
+from blog.models import Article, Category
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
-    secret_code = forms.CharField(label="Code secret (pour gestionnaires)", max_length=36, required=False)  # Changé de 10 à 36
+    secret_code = forms.CharField(label="Code secret (pour gestionnaires)", max_length=36, required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,13 +102,17 @@ class ArticleForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
+from django import forms
+from ecommerce.models import Category
+
 class CategoryForm(forms.ModelForm):
     class Meta:
-        model = BlogCategory
-        fields = ['name', 'description']
+        model = Category
+        fields = ['name', 'description', 'category_type']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'category_type': forms.Select(attrs={'class': 'form-control'}),
         }
 
 from ecommerce.models import Product

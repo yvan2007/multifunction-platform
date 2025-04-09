@@ -1679,10 +1679,158 @@ form input[type="submit"]:focus {
 
 .form-control {
   border-radius: 10px;
-  border: 1px solid #ced4da;
+  border: 1px solid #0056b3;
   padding: 10px;
 }
 
 .form-label {
   font-weight: 500;
+}
+body {
+  font-family: sans-serif;
+}
+
+.card {
+  border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transition: opacity 0.3s;
+}
+
+.card-img-top:hover {
+  opacity: 0.9;
+}
+
+.btn-primary {
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-success {
+  transition: background-color 0.3s;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-warning {
+  transition: background-color 0.3s;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+}
+
+.btn-danger {
+  transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-outline-secondary {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+h2, h3 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.text-muted {
+  font-size: 0.9rem;
+}
+
+.display-4 {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.img-fluid.rounded {
+  border-radius: 8px;
+}
+/* static/css/style.css */
+body {
+  font-family: sans-serif;
+}
+
+h2, h3 {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Style des compteurs */
+.card {
+  border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.display-4 {
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+/* Style des sections récentes */
+.recent-section .card {
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.recent-section .card-body {
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+/* Style des boutons de filtrage */
+.btn-outline-primary {
+  margin-right: 10px;
+  border-radius: 20px;
+}
+
+.btn-outline-primary.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Style de la liste des catégories */
+.list-group-item {
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.list-group-item .btn {
+  margin-left: 5px;
 }

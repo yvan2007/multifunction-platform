@@ -1,6 +1,7 @@
-### ecommerce/models.py
+# ecommerce/models.py
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 
 # Modèle pour les catégories de produits
 class Category(models.Model):
@@ -14,6 +15,8 @@ class Category(models.Model):
         ],
         default='product',
     )
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    is_active = models.BooleanField(default=True)  # Ajout pour cohérence avec Product
 
     def __str__(self):
         return self.name
@@ -37,7 +40,7 @@ class Product(models.Model):
     tags = models.ManyToManyField(Tag, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)  # To toggle product visibility
+    is_active = models.BooleanField(default=True)  # Déjà correct
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -103,7 +106,7 @@ class Order(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='ecommerce_orders'  # Ajout d'un related_name unique
+        related_name='ecommerce_orders'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -123,7 +126,7 @@ class OrderItem(models.Model):
         Product,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='ecommerce_order_items'  # Ajout d'un related_name unique
+        related_name='ecommerce_order_items'
     )
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -140,7 +143,7 @@ class OrderItem(models.Model):
 class Payment(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50, default='carte')  # Ajouté pour OrderForm
+    payment_method = models.CharField(max_length=50, default='carte')
     status = models.CharField(max_length=20, default='completed')
     transaction_id = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -166,7 +169,6 @@ class NewsletterSubscription(models.Model):
 
     def __str__(self):
         return self.email
-
 
 # Modèle pour les notifications
 class Notification(models.Model):
