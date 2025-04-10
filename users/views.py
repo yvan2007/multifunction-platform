@@ -1,4 +1,3 @@
-# users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -19,7 +18,7 @@ from blog.models import Article
 # Import des formulaires
 from .forms import (
     CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm,
-    ProductForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
+    ProductForm, ProductImageForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
 )
 
 import random
@@ -352,7 +351,7 @@ def manager_dashboard(request):
     """Tableau de bord des gestionnaires."""
     filter_type = request.GET.get('filter', 'newest')
 
-    article_count = Article.objects.filter(status='published').count()  # Compter uniquement les articles publiés
+    article_count = Article.objects.filter(status='published').count()
     category_count = Category.objects.filter(category_type='product', is_active=True).count()
     product_count = Product.objects.filter(is_active=True).count()
     order_count = Order.objects.count()
@@ -385,7 +384,12 @@ def manager_dashboard(request):
 @manager_required
 def manage_articles(request):
     """Gérer les articles (CRUD)."""
-    articles = Article.objects.all()
+    categories = Category.objects.filter(category_type='blog', is_active=True)
+    if not categories.exists():
+        django_messages.warning(request, "Aucune catégorie de blog disponible. Veuillez en créer une avant d'ajouter un article.")
+        articles = Article.objects.none()  # Aucun article si aucune catégorie
+    else:
+        articles = Article.objects.all()
     
     if request.method == 'POST':
         if 'delete' in request.POST:
@@ -399,7 +403,7 @@ def manage_articles(request):
             if form.is_valid():
                 article = form.save(commit=False)
                 article.author = request.user
-                article.status = 'published'  # Définir comme publié par défaut
+                article.status = 'published'
                 article.save()
                 form.save_m2m()
                 django_messages.success(request, "Article créé avec succès.")
@@ -412,12 +416,17 @@ def manage_articles(request):
 @manager_required
 def add_article(request):
     """Ajouter un nouvel article."""
+    categories = Category.objects.filter(category_type='blog', is_active=True)
+    if not categories.exists():
+        django_messages.warning(request, "Aucune catégorie de blog disponible. Veuillez en créer une avant d'ajouter un article.")
+        return redirect('users:manage_categories')
+
     if request.method == 'POST':
         form = ArticleForm(request.POST, request.FILES)
         if form.is_valid():
             article = form.save(commit=False)
             article.author = request.user
-            article.status = 'published'  # Définir comme publié par défaut
+            article.status = 'published'
             article.save()
             form.save_m2m()
             django_messages.success(request, "Article ajouté avec succès.")
@@ -447,7 +456,7 @@ def manage_categories(request):
     filter_type = request.GET.get('filter', 'newest')
     search_query = request.GET.get('search', '')
 
-    categories = Category.objects.filter(category_type='product', is_active=True)
+    categories = Category.objects.filter(is_active=True)  # Afficher toutes les catégories (Blog et Produit)
     if search_query:
         categories = categories.filter(name__icontains=search_query)
 
@@ -467,7 +476,7 @@ def manage_categories(request):
             form = CategoryForm(request.POST)
             if form.is_valid():
                 category = form.save(commit=False)
-                category.is_active = True  # S'assurer que la catégorie est active
+                category.is_active = True
                 category.save()
                 django_messages.success(request, "Catégorie créée avec succès.")
                 return redirect('users:manage_categories')
@@ -487,7 +496,7 @@ def add_category(request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             category = form.save(commit=False)
-            category.is_active = True  # S'assurer que la catégorie est active
+            category.is_active = True
             category.save()
             django_messages.success(request, "Catégorie ajoutée avec succès.")
             return redirect('users:manage_categories')
@@ -516,14 +525,19 @@ def manage_products(request):
     filter_type = request.GET.get('filter', 'newest')
     search_query = request.GET.get('search', '')
 
-    products = Product.objects.filter(is_active=True)
-    if search_query:
-        products = products.filter(name__icontains=search_query)
-
-    if filter_type == 'alpha':
-        products = products.order_by('name')
+    categories = Category.objects.filter(category_type='product', is_active=True)
+    if not categories.exists():
+        django_messages.warning(request, "Aucune catégorie de produit disponible. Veuillez en créer une avant d'ajouter un produit.")
+        products = Product.objects.none()  # Aucun produit si aucune catégorie
     else:
-        products = products.order_by('-created_at')
+        products = Product.objects.filter(is_active=True)
+        if search_query:
+            products = products.filter(name__icontains=search_query)
+
+        if filter_type == 'alpha':
+            products = products.order_by('name')
+        else:
+            products = products.order_by('-created_at')
 
     if request.method == 'POST':
         if 'delete' in request.POST:
@@ -533,52 +547,80 @@ def manage_products(request):
             django_messages.success(request, "Produit supprimé avec succès.")
             return redirect('users:manage_products')
         else:
-            form = ProductForm(request.POST, request.FILES)
-            if form.is_valid():
+            # Gestion du formulaire dans le modal
+            form = ProductForm(request.POST)
+            image_form = ProductImageForm(request.POST, request.FILES)
+            if form.is_valid() and image_form.is_valid():
                 product = form.save(commit=False)
-                product.is_active = True  # S'assurer que le produit est actif
+                product.is_active = True
                 product.save()
                 form.save_m2m()
-                django_messages.success(request, "Produit créé avec succès.")
+                if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+                    image = image_form.save(commit=False)
+                    image.product = product
+                    image.save()
+                django_messages.success(request, "Produit ajouté avec succès.")
                 return redirect('users:manage_products')
-    else:
-        form = ProductForm()
+
+    # Pour le GET, passer les formulaires au contexte
+    form = ProductForm()
+    image_form = ProductImageForm()
 
     return render(request, 'users/manage_products.html', {
         'products': products,
-        'form': form,
         'filter_type': filter_type,
+        'form': form,
+        'image_form': image_form,
     })
 
 @manager_required
 def add_product(request):
-    """Ajouter un nouveau produit."""
+    """Ajouter un produit."""
+    categories = Category.objects.filter(category_type='product', is_active=True)
+    if not categories.exists():
+        django_messages.warning(request, "Aucune catégorie de produit disponible. Veuillez en créer une avant d'ajouter un produit.")
+        return redirect('users:manage_categories')
+
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
+        form = ProductForm(request.POST)
+        image_form = ProductImageForm(request.POST, request.FILES)
+        if form.is_valid() and image_form.is_valid():
             product = form.save(commit=False)
-            product.is_active = True  # S'assurer que le produit est actif
+            product.is_active = True
             product.save()
             form.save_m2m()
+            if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+                image = image_form.save(commit=False)
+                image.product = product
+                image.save()
             django_messages.success(request, "Produit ajouté avec succès.")
             return redirect('users:manage_products')
     else:
         form = ProductForm()
-    return render(request, 'users/add_product.html', {'form': form})
+        image_form = ProductImageForm()
+    return render(request, 'users/add_product.html', {'form': form, 'image_form': image_form})
 
 @manager_required
 def edit_product(request, product_id):
     """Modifier un produit existant."""
     product = get_object_or_404(Product, id=product_id)
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
+        form = ProductForm(request.POST, instance=product)
+        image_form = ProductImageForm(request.POST, request.FILES)
+        if form.is_valid() and image_form.is_valid():
             form.save()
+            if image_form.cleaned_data['image']:
+                # Supprimer les anciennes images si nécessaire
+                product.images.all().delete()
+                image = image_form.save(commit=False)
+                image.product = product
+                image.save()
             django_messages.success(request, "Produit mis à jour avec succès.")
             return redirect('users:manage_products')
     else:
         form = ProductForm(instance=product)
-    return render(request, 'users/edit_product.html', {'form': form, 'product': product})
+        image_form = ProductImageForm()
+    return render(request, 'users/edit_product.html', {'form': form, 'image_form': image_form, 'product': product})
 
 # Gestion des commandes
 @manager_required

@@ -37,15 +37,15 @@
     <form method="post" class="mb-4">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="id_name" class="form-label">Nom de la catégorie</label>
+            <label for="id_name" class="form-label"><i class="fas fa-tag"></i> Nom de la catégorie</label>
             {{ form.name }}
         </div>
         <div class="mb-3">
-            <label for="id_description" class="form-label">Description</label>
+            <label for="id_description" class="form-label"><i class="fas fa-align-left"></i> Description</label>
             {{ form.description }}
         </div>
         <div class="mb-3">
-            <label for="id_category_type" class="form-label">Type de catégorie</label>
+            <label for="id_category_type" class="form-label"><i class="fas fa-folder"></i> Type de catégorie</label>
             {{ form.category_type }}
         </div>
         <button type="submit" class="btn btn-success">Ajouter</button>
@@ -57,13 +57,13 @@
         <ul class="list-group">
             {% for category in categories %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {{ category.name }} (Ajoutée le {{ category.created_at|date:"d M Y" }})
+                    <span><i class="fas fa-folder"></i> {{ category.name }} ({{ category.get_category_type_display }}) (Ajoutée le {{ category.created_at|date:"d M Y" }})</span>
                     <div>
-                        <a href="{% url 'users:edit_category' category.id %}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                        <a href="{% url 'users:edit_category' category.id %}" class="btn btn-sm btn-warning">Modifier</a>
                         <form method="post" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="category_id" value="{{ category.id }}">
-                            <button type="submit" name="delete" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                            <button type="submit" name="delete" class="btn btn-sm btn-danger">Supprimer</button>
                         </form>
                     </div>
                 </li>

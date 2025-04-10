@@ -2,6 +2,7 @@
 from django import forms
 from django.shortcuts import redirect, render
 from .models import Product
+from ecommerce.models import ProductImage
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -22,3 +23,7 @@ def add_product(request):
     else:
         form = ProductForm()
     return render(request, 'add_product.html', {'form': form})
+class ProductImageForm(forms.ModelForm):
+    class Meta:
+        model = ProductImage
+        fields = ['image', 'alt_text']

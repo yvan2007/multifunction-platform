@@ -1,41 +1,66 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panier{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-4">
     <h2>Votre panier</h2>
     {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
     {% if cart_items %}
         <table class="table">
             <thead>
                 <tr>
                     <th>Produit</th>
-                    <th>Quantité</th>
                     <th>Prix unitaire</th>
+                    <th>Quantité</th>
                     <th>Prix total</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in cart_items %}
                     <tr>
-                        <td>{{ item.product.name }}</td>
+                        <td>
+                            {% if is_authenticated %}
+                                {{ item.product.name }}
+                            {% else %}
+                                {{ item.product.name }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if is_authenticated %}
+                                {{ item.product.price }} FCFA
+                            {% else %}
+                                {{ item.product.price }} FCFA
+                            {% endif %}
+                        </td>
                         <td>{{ item.quantity }}</td>
-                        <td>{{ item.product.price }} FCFA</td>
-                        <td>{{ item.total_price }} FCFA</td>
+                        <td>
+                            {% if is_authenticated %}
+                                {{ item.product.price|floatformat:2|multiply:item.quantity }} FCFA
+                            {% else %}
+                                {{ item.total_price|floatformat:2 }} FCFA
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'orders:remove_from_cart' item.product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <h4>Total : {{ total_amount }} FCFA</h4>
-        {% if is_authenticated %}
-            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer la commande</a>
-        {% else %}
-            <p>Vous devez vous connecter pour passer une commande.</p>
-            <a href="{% url 'users:login' %}?next={% url 'orders:checkout' %}" class="btn btn-primary">Se connecter</a>
-        {% endif %}
+        <p><strong>Total : </strong>{{ total_amount|floatformat:2 }} FCFA</p>
+        <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer à la caisse</a>
     {% else %}
         <p>Votre panier est vide.</p>
         <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>

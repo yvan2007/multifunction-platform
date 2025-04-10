@@ -1,19 +1,27 @@
-# blog/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Article, Comment
 from ecommerce.models import Category
+from users.forms import ArticleForm  # Importer ArticleForm depuis users.forms
 
 def blog(request):
-    articles = Article.objects.filter(status='published')  # Ne montrer que les articles publiés
-    categories = Category.objects.filter(category_type='blog')
+    categories = Category.objects.filter(category_type='blog', is_active=True)
+    if not categories.exists():
+        messages.warning(request, "Aucune catégorie de blog disponible.")
+        articles = Article.objects.none()
+    else:
+        articles = Article.objects.filter(status='published')
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories})
 
 @login_required
 def add_article(request):
+    categories = Category.objects.filter(category_type='blog', is_active=True)
+    if not categories.exists():
+        messages.warning(request, "Aucune catégorie de blog disponible. Veuillez en créer une avant d'ajouter un article.")
+        return redirect('users:manage_categories')
+
     if request.method == 'POST':
-        from .forms import ArticleForm
         form = ArticleForm(request.POST, request.FILES)
         if form.is_valid():
             article = form.save(commit=False)
@@ -23,9 +31,8 @@ def add_article(request):
             messages.success(request, "Article ajouté avec succès !")
             return redirect('blog:blog')
     else:
-        from .forms import ArticleForm
         form = ArticleForm()
-    return render(request, 'add_article.html', {'form': form})
+    return render(request, 'blog/add_article.html', {'form': form})
 
 @login_required
 def edit_article(request, article_id):
@@ -34,16 +41,14 @@ def edit_article(request, article_id):
         messages.error(request, "Vous n'êtes pas autorisé à modifier cet article.")
         return redirect('blog:blog')
     if request.method == 'POST':
-        from .forms import ArticleForm
         form = ArticleForm(request.POST, request.FILES, instance=article)
         if form.is_valid():
             form.save()
             messages.success(request, "Article modifié avec succès !")
             return redirect('blog:blog')
     else:
-        from .forms import ArticleForm
         form = ArticleForm(instance=article)
-    return render(request, 'edit_article.html', {'form': form, 'article': article})
+    return render(request, 'blog/edit_article.html', {'form': form, 'article': article})
 
 @login_required
 def delete_article(request, article_id):
@@ -67,13 +72,13 @@ def like_article(request, article_id):
     return redirect('blog:article_detail', slug=article.slug)
 
 def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug, status='published')  # Ne montrer que les articles publiés
+    article = get_object_or_404(Article, slug=slug, status='published')
     comments = article.comments.all()
     return render(request, 'blog/article_detail.html', {'article': article, 'comments': comments})
 
 def articles_by_category(request, category_id):
     category = get_object_or_404(Category, id=category_id, category_type='blog')
-    articles = Article.objects.filter(category=category, status='published')  # Ne montrer que les articles publiés
+    articles = Article.objects.filter(category=category, status='published')
     categories = Category.objects.filter(category_type='blog')
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories, 'selected_category': category})
 

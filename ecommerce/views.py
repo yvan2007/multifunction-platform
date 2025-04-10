@@ -1,15 +1,12 @@
-# ecommerce/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Cart, CartItem, Product, ProductImage, Category
 
 def product_list(request):
-    # Récupérer uniquement les catégories actives de type 'product'
     product_categories = Category.objects.filter(category_type='product', is_active=True)
     print("Categories:", product_categories)  # Débogage
 
-    # Récupérer la catégorie sélectionnée (si un filtre est appliqué via GET)
     category_id = request.GET.get('category')
     if category_id:
         products = Product.objects.filter(category__id=category_id, is_active=True).order_by('-created_at')
@@ -29,26 +26,39 @@ def product_list(request):
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
     related_products = Product.objects.filter(category=product.category).exclude(slug=slug)[:4]
-    return render(request, 'ecommerce/product_detail.html', {  # Correction du template
+    
+    # Vérifier si le produit est dans les favoris de l'utilisateur
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = request.user.favorites.filter(id=product.id).exists()
+
+    return render(request, 'ecommerce/product_detail.html', {
         'product': product,
-        'related_products': related_products
+        'related_products': related_products,
+        'is_favorited': is_favorited,
     })
 
 @login_required
 def add_product(request):
-    from multifunction_platform.forms import ProductForm
+    from users.forms import ProductForm, ProductImageForm  # Changé pour importer depuis users.forms
     if not request.user.is_manager:
         messages.error(request, "Vous n'êtes pas autorisé à ajouter un produit.")
         return redirect('ecommerce:product_list')
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
+        form = ProductForm(request.POST)
+        image_form = ProductImageForm(request.POST, request.FILES)
+        if form.is_valid() and image_form.is_valid():
             product = form.save()
+            if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+                image = image_form.save(commit=False)
+                image.product = product
+                image.save()
             messages.success(request, "Produit ajouté avec succès !")
             return redirect('ecommerce:product_list')
     else:
         form = ProductForm()
-    return render(request, 'ecommerce/add_product.html', {'form': form})
+        image_form = ProductImageForm()
+    return render(request, 'ecommerce/add_product.html', {'form': form, 'image_form': image_form})
 
 @login_required
 def add_to_cart(request, product_id):

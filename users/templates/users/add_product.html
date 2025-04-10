@@ -37,13 +37,6 @@
             {% endif %}
         </div>
         <div class="mb-3">
-            <label for="{{ form.image.id_for_label }}" class="form-label"><i class="fas fa-image"></i> Image du produit</label>
-            {{ form.image|add_class:"form-control" }}
-            {% if form.image.errors %}
-                <div class="text-danger">{{ form.image.errors }}</div>
-            {% endif %}
-        </div>
-        <div class="mb-3">
             <label for="{{ form.category.id_for_label }}" class="form-label"><i class="fas fa-folder"></i> Catégorie</label>
             {{ form.category|add_class:"form-control" }}
             {% if form.category.errors %}
@@ -51,10 +44,17 @@
             {% endif %}
         </div>
         <div class="mb-3">
-            <label for="{{ form.tags.id_for_label }}" class="form-label"><i class="fas fa-tags"></i> Tags</label>
-            {{ form.tags|add_class:"form-control" }}
-            {% if form.tags.errors %}
-                <div class="text-danger">{{ form.tags.errors }}</div>
+            <label for="{{ image_form.image.id_for_label }}" class="form-label"><i class="fas fa-image"></i> Image du produit</label>
+            {{ image_form.image|add_class:"form-control" }}
+            {% if image_form.image.errors %}
+                <div class="text-danger">{{ image_form.image.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ image_form.alt_text.id_for_label }}" class="form-label"><i class="fas fa-text"></i> Texte alternatif</label>
+            {{ image_form.alt_text|add_class:"form-control" }}
+            {% if image_form.alt_text.errors %}
+                <div class="text-danger">{{ image_form.alt_text.errors }}</div>
             {% endif %}
         </div>
         <div class="mb-3 form-check">

@@ -1,4 +1,3 @@
-### orders/views.py (version corrigée)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -30,6 +29,30 @@ def add_to_cart(request, product_id):
         request.session.modified = True  # S'assurer que la session est sauvegardée
 
     messages.success(request, "Produit ajouté au panier !")
+    return redirect('orders:cart')
+
+def remove_from_cart(request, product_id):
+    if request.user.is_authenticated:
+        # Utilisateur connecté : utiliser le modèle Cart
+        cart = get_object_or_404(Cart, user=request.user)
+        cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+        cart_item.delete()
+        messages.success(request, "Produit retiré du panier !")
+    else:
+        # Utilisateur non connecté : utiliser la session
+        if 'cart' in request.session:
+            cart = request.session['cart']
+            product_id_str = str(product_id)
+            if product_id_str in cart:
+                del cart[product_id_str]
+                request.session['cart'] = cart
+                request.session.modified = True
+                messages.success(request, "Produit retiré du panier !")
+            else:
+                messages.error(request, "Ce produit n'est pas dans votre panier.")
+        else:
+            messages.error(request, "Votre panier est vide.")
+
     return redirect('orders:cart')
 
 def cart(request):
@@ -77,10 +100,20 @@ def checkout(request):
 
         if request.method == 'POST':
             address_id = request.POST.get('address_id')
-            address = get_object_or_404(Address, id=address_id, user=request.user)
+            if not address_id:
+                messages.error(request, "Veuillez sélectionner une adresse de livraison.")
+                return redirect('orders:checkout')
+
+            try:
+                address = Address.objects.get(id=address_id, user=request.user)
+            except Address.DoesNotExist:
+                messages.error(request, "L'adresse sélectionnée est invalide ou n'existe plus. Veuillez en choisir une autre.")
+                return redirect('orders:checkout')
+
             order = Order.objects.create(
                 user=request.user,
-                total_price=cart.total_amount
+                total_price=cart.total_amount,
+                address=address  # Associer l'adresse à la commande
             )
             for item in cart.items.all():
                 OrderItem.objects.create(
@@ -108,16 +141,6 @@ def checkout(request):
 def order_history(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'ecommerce/order_history.html', {'orders': orders})
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Order
-
-### orders/views.py (extrait)
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from ecommerce.models import Order, Product  # Changé pour importer depuis ecommerce.models
-from .models import OrderItem  # Note : OrderItem ici est orders.OrderItem, ce qui peut poser problème
 
 @login_required
 def order_detail(request, order_id):

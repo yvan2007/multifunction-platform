@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate
-from .models import CustomUser, UserProfile, Address
-from blog.models import Article, Category
 from django_ckeditor_5.widgets import CKEditor5Widget
+from .models import CustomUser, UserProfile, Address
+from blog.models import Article, Category as BlogCategory
+from ecommerce.models import Category, Product, ProductImage
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
@@ -62,11 +63,6 @@ class ManagerCreationForm(CustomUserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2']
 
-class ManagerCreationForm(CustomUserCreationForm):
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email', 'password1', 'password2']
-
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
@@ -89,21 +85,21 @@ class AddressForm(forms.ModelForm):
         }
 
 class ArticleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(category_type='blog', is_active=True)
+
     class Meta:
         model = Article
         fields = ['title', 'content', 'category', 'tags', 'status', 'image']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre de l\'article'}),
             'content': CKEditor5Widget(attrs={'class': 'django_ckeditor_5'}),
-            'content': forms.Textarea(attrs={'class': 'form-control'}),  # CKEditor5 handles its own widget
             'category': forms.Select(attrs={'class': 'form-control'}),
             'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
-
-from django import forms
-from ecommerce.models import Category
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -115,19 +111,36 @@ class CategoryForm(forms.ModelForm):
             'category_type': forms.Select(attrs={'class': 'form-control'}),
         }
 
-from ecommerce.models import Product
-
 class ProductForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(category_type='product', is_active=True)
+
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'stock', 'image', 'category', 'tags', 'is_active']
+        fields = ['name', 'description', 'price', 'stock', 'category', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom du produit'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Prix'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Prix (FCFA)'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'name': 'Nom du produit',
+            'description': 'Description',
+            'price': 'Prix (FCFA)',
+            'stock': 'Stock',
+            'category': 'Catégorie',
+            'is_active': 'Produit actif',
+        }
+
+class ProductImageForm(forms.ModelForm):
+    class Meta:
+        model = ProductImage
+        fields = ['image', 'alt_text']
+        widgets = {
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'alt_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Texte alternatif pour l'image"}),
         }

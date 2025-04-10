@@ -47,10 +47,10 @@ urlpatterns = [
     path('manage-articles/edit/<int:article_id>/', views.edit_article, name='edit_article'),
     path('manage-categories/', views.manage_categories, name='manage_categories'),
     path('manage-categories/edit/<int:category_id>/', views.edit_category, name='edit_category'),
-    path('manage-products/', views.manage_products, name='manage_products'),  # Added this line
-    path('manage-products/add/', views.add_product, name='add_product'),  # Ensure this is present
-    path('manage-orders/', views.manage_orders, name='manage_orders'),  # Added this line
-    path('manage-categories/add/', views.add_category, name='add_category'),  # Added this line
-    path('manage-articles/add/', views.add_article, name='add_article'),  # Added this line
+    path('manage-products/', views.manage_products, name='manage_products'),
+    path('manage-products/add/', views.add_product, name='add_product'),
+    path('manage-orders/', views.manage_orders, name='manage_orders'),
+    path('manage-categories/add/', views.add_category, name='add_category'),
+    path('manage-articles/add/', views.add_article, name='add_article'),
     path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
 ]

@@ -1,6 +1,7 @@
 ﻿C:\Users\YVXN20\multifunction_platform\multifunction_platform\blog
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\logs
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\media
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\multifunction_platform
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\orders
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\static
@@ -40,6 +41,7 @@ C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\template
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\__pycache__
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\admin.py
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\api.py
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\api_urls.py
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\apps.py
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\forms.py
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\models.py
@@ -56,6 +58,10 @@ C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\template
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\templates\ecommerce\product_detail.html
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\ecommerce\templates\ecommerce\product_list.html
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\logs\axes.log
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\media\article_covers
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\media\product_images
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\media\article_covers\luffy-meditating-under-the-moonlight-one-piece-moewalls-com_-_frame_at_0m17s.jpg
+C:\Users\YVXN20\multifunction_platform\multifunction_platform\media\product_images\Gray_and_Black_Simple_Studio_Logo.png
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\multifunction_platform\__pycache__
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\multifunction_platform\asgi.py
 C:\Users\YVXN20\multifunction_platform\multifunction_platform\multifunction_platform\context_processors.py

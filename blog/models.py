@@ -1,9 +1,8 @@
-# blog/models.py
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
-from ecommerce.models import Category  # Importer Category depuis ecommerce
+from ecommerce.models import Category
 
 class Article(models.Model):
     STATUS_CHOICES = (
@@ -26,7 +25,7 @@ class Article(models.Model):
     tags = models.ManyToManyField('ecommerce.Tag', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published')  # Changé à 'published'
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published')
     likes = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='liked_articles',
