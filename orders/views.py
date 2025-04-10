@@ -56,33 +56,83 @@ def remove_from_cart(request, product_id):
     return redirect('orders:cart')
 
 def cart(request):
+    cart_items = []
+    total_price = 0
+
     if request.user.is_authenticated:
         # Utilisateur connecté : utiliser le modèle Cart
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_items = cart.items.all()
-        total_amount = cart.total_amount
+        try:
+            cart = Cart.objects.get(user=request.user)
+            cart_items = cart.items.all()  # Récupérer les éléments via la relation related_name='items'
+            total_price = cart.total_amount  # Utiliser la propriété total_amount du modèle Cart
+        except Cart.DoesNotExist:
+            cart_items = []
+            total_price = 0
     else:
         # Utilisateur non connecté : utiliser la session
-        if 'cart' not in request.session:
-            request.session['cart'] = {}
-        cart = request.session['cart']
-        cart_items = []
-        total_amount = 0
-        for product_id, quantity in cart.items():
-            product = get_object_or_404(Product, id=int(product_id))
-            total_price = product.price * quantity
-            cart_items.append({
-                'product': product,
-                'quantity': quantity,
-                'total_price': total_price,
-            })
-            total_amount += total_price
+        if 'cart' in request.session:
+            cart = request.session['cart']
+            cart_items = []
+            for product_id, quantity in cart.items():
+                try:
+                    product = Product.objects.get(id=int(product_id))
+                    # Créer un objet temporaire pour simuler un CartItem
+                    cart_item = type('CartItem', (), {
+                        'product': product,
+                        'quantity': quantity,
+                        'get_total_price': lambda self: self.product.price * self.quantity
+                    })()
+                    cart_items.append(cart_item)
+                    total_price += cart_item.get_total_price()
+                except Product.DoesNotExist:
+                    continue
+        else:
+            cart_items = []
+            total_price = 0
 
-    return render(request, 'ecommerce/cart_detail.html', {
+    return render(request, 'orders/cart.html', {
         'cart_items': cart_items,
-        'total_amount': total_amount,
         'is_authenticated': request.user.is_authenticated,
+        'total_price': total_price,
     })
+
+@login_required(login_url='users:login')
+def update_cart(request, product_id):  # Changed item_id to product_id
+    """Mettre à jour la quantité d'un élément dans le panier."""
+    if request.user.is_authenticated:
+        # Utilisateur connecté : utiliser le modèle Cart
+        cart = get_object_or_404(Cart, user=request.user)
+        cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+        if request.method == 'POST':
+            quantity = int(request.POST.get('quantity', 1))
+            if quantity > 0:
+                cart_item.quantity = quantity
+                cart_item.save()
+                messages.success(request, "Quantité mise à jour !")
+            else:
+                cart_item.delete()
+                messages.success(request, "Produit retiré du panier !")
+    else:
+        # Utilisateur non connecté : utiliser la session
+        if 'cart' in request.session:
+            cart = request.session['cart']
+            product_id_str = str(product_id)
+            if product_id_str in cart:
+                quantity = int(request.POST.get('quantity', 1))
+                if quantity > 0:
+                    cart[product_id_str] = quantity
+                    messages.success(request, "Quantité mise à jour !")
+                else:
+                    del cart[product_id_str]
+                    messages.success(request, "Produit retiré du panier !")
+                request.session['cart'] = cart
+                request.session.modified = True
+            else:
+                messages.error(request, "Ce produit n'est pas dans votre panier.")
+        else:
+            messages.error(request, "Votre panier est vide.")
+
+    return redirect('orders:cart')
 
 @login_required(login_url='users:login')
 def checkout(request):
@@ -132,7 +182,7 @@ def checkout(request):
             messages.success(request, "Commande passée avec succès !")
             return redirect('orders:order_history')
 
-        return render(request, 'ecommerce/checkout.html', {'cart': cart, 'addresses': addresses})
+        return render(request, 'orders/checkout.html', {'cart': cart, 'addresses': addresses})
     else:
         # Cela ne devrait jamais arriver car @login_required redirige vers la page de connexion
         return redirect('users:login')
@@ -140,7 +190,7 @@ def checkout(request):
 @login_required(login_url='users:login')
 def order_history(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'ecommerce/order_history.html', {'orders': orders})
+    return render(request, 'orders/order_history.html', {'orders': orders})
 
 @login_required
 def order_detail(request, order_id):

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Historique des commandes</h1>
+
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if orders %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Numéro de commande</th>
+                    <th>Date</th>
+                    <th>Total (FCFA)</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>{{ order.total_price|floatformat:2 }}</td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                                En attente
+                            {% elif order.status == 'processing' %}
+                                En cours de traitement
+                            {% elif order.status == 'shipped' %}
+                                Expédiée
+                            {% elif order.status == 'delivered' %}
+                                Livrée
+                            {% elif order.status == 'cancelled' %}
+                                Annulée
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary">Voir les détails</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Vous n'avez aucune commande pour le moment.</p>
+        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
+    {% endif %}
+</div>
+{% endblock %}

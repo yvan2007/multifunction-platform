@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% load cart_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Votre panier</h1>
+
+    {% if cart_items %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Produit</th>
+                    <th>Prix unitaire (FCFA)</th>
+                    <th>Quantité</th>
+                    <th>Total (FCFA)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td>
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="max-width: 50px;">
+                            {% else %}
+                                Aucune image
+                            {% endif %}
+                        </td>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.product.price }}</td>
+                        <td>
+                            <form method="POST" action="{% url 'orders:update_cart' item.product.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" style="width: 60px;">
+                                <button type="submit" class="btn btn-sm btn-primary">Mettre à jour</button>
+                            </form>
+                        </td>
+                        <td>{{ item.product.price|floatformat:2|multiply:item.quantity }}</td>
+                        <td>
+                            <a href="{% url 'orders:remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-end">
+            <h4>Total : {{ total_price|floatformat:2 }} FCFA</h4>
+            <a href="{% url 'orders:checkout' %}" class="btn btn-success">Passer la commande</a>
+        </div>
+    {% else %}
+        <p>Votre panier est vide.</p>
+        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
+    {% endif %}
+</div>
+{% endblock %}

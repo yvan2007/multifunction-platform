@@ -127,11 +127,13 @@
                         <td>{{ product.stock }}</td>
                         <td>{{ product.category.name }}</td>
                         <td>
-                            {% if product.primary_image %}
-                                <img src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" style="max-width: 50px;">
-                            {% else %}
-                                Aucune image
-                            {% endif %}
+                            {% with first_image=product.images.first %}
+                                {% if first_image %}
+                                    <img src="{{ first_image.image.url }}" alt="{{ first_image.alt_text|default:product.name }}" style="max-width: 50px;">
+                                {% else %}
+                                    Aucune image
+                                {% endif %}
+                            {% endwith %}
                         </td>
                         <td>{{ product.is_active|yesno:"Oui,Non" }}</td>
                         <td>

@@ -19,7 +19,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# Modèle pour les tags (utilisé dans Article dans blog.models et Product)
+# Modèle pour les tags
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,6 +36,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     tags = models.ManyToManyField(Tag, blank=True)
     stock = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -50,7 +51,6 @@ class Product(models.Model):
 
     @property
     def primary_image(self):
-        """Retourne la première image associée au produit, ou None si aucune image n'existe."""
         return self.images.first()
 
 # Modèle pour les images de produits
@@ -90,7 +90,7 @@ class Cart(models.Model):
 # Modèle pour les éléments du panier
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='ecommerce_cart_items')  # Ajout de related_name
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(default=timezone.now)
 

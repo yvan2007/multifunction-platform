@@ -2,20 +2,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Cart, CartItem, Product, ProductImage, Category
+from users.models import Favorite
 
 def product_list(request):
     product_categories = Category.objects.filter(category_type='product', is_active=True)
-    print("Categories:", product_categories)  # Débogage
+    print("Categories in product_list:", [cat.name for cat in product_categories])  # Débogage
 
     category_id = request.GET.get('category')
     if category_id:
-        products = Product.objects.filter(category__id=category_id, is_active=True).order_by('-created_at')
+        products = Product.objects.filter(category__id=category_id, is_active=True).order_by('-created_at').prefetch_related('images')
         selected_category = get_object_or_404(Category, id=category_id, category_type='product')
     else:
-        products = Product.objects.filter(is_active=True).order_by('-created_at')
+        products = Product.objects.filter(is_active=True).order_by('-created_at').prefetch_related('images')
         selected_category = None
 
-    print("Products:", products)  # Débogage
+    print("Products in product_list:", [prod.name for prod in products])  # Débogage
+    for product in products:
+        print(f"Product: {product.name}, Category: {product.category.name}, Is Active: {product.is_active}, Primary Image: {product.primary_image.image.url if product.primary_image else 'None'}")
 
     return render(request, 'ecommerce/product_list.html', {
         'product_categories': product_categories,
@@ -40,7 +43,7 @@ def product_detail(request, slug):
 
 @login_required
 def add_product(request):
-    from users.forms import ProductForm, ProductImageForm  # Changé pour importer depuis users.forms
+    from users.forms import ProductForm, ProductImageForm
     if not request.user.is_manager:
         messages.error(request, "Vous n'êtes pas autorisé à ajouter un produit.")
         return redirect('ecommerce:product_list')
@@ -49,7 +52,7 @@ def add_product(request):
         image_form = ProductImageForm(request.POST, request.FILES)
         if form.is_valid() and image_form.is_valid():
             product = form.save()
-            if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+            if image_form.cleaned_data['image']:
                 image = image_form.save(commit=False)
                 image.product = product
                 image.save()
@@ -70,3 +73,33 @@ def add_to_cart(request, product_id):
         cart_item.save()
     messages.success(request, f"{product.name} a été ajouté à votre panier !")
     return redirect('orders:cart')
+
+@login_required
+def toggle_favorite(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
+    if not created:
+        favorite.delete()
+        messages.success(request, f"{product.name} retiré des favoris.")
+    else:
+        messages.success(request, f"{product.name} ajouté aux favoris !")
+    return redirect(request.META.get('HTTP_REFERER', 'ecommerce:product_list'))
+
+def ecommerce(request):
+    category_id = request.GET.get('category')
+    categories = Category.objects.filter(category_type='product', is_active=True)
+    print("Categories in ecommerce view:", [cat.name for cat in categories])  # Debug
+
+    if category_id:
+        products = Product.objects.filter(category_id=category_id, is_active=True).prefetch_related('images')
+    else:
+        products = Product.objects.filter(is_active=True).prefetch_related('images')
+    
+    print("Products in ecommerce view:", [prod.name for prod in products])  # Debug
+    for product in products:
+        print(f"Product: {product.name}, Category: {product.category.name}, Is Active: {product.is_active}, Primary Image: {product.primary_image.image.url if product.primary_image else 'None'}")
+    
+    return render(request, 'ecommerce/ecommerce.html', {
+        'products': products,
+        'categories': categories,
+    })

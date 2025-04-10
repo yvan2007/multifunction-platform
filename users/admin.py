@@ -13,6 +13,8 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'phone_number']
     search_fields = ['user__username', 'bio']
 
+
+
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['user', 'street', 'city', 'country', 'is_default', 'created_at']
@@ -21,7 +23,7 @@ class AddressAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ['user', 'product', 'added_at']
+    list_display = ['user', 'product', 'created_at']
     search_fields = ['user__username', 'product__name']
 
 @admin.register(Message)

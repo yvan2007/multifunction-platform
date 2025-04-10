@@ -1,4 +1,3 @@
-# ecommerce/api.py
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,7 +25,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             raise
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.filter(is_active=True)
+    queryset = Category.objects.filter(is_active=True, category_type='product')  # Filter by product type by default
     serializer_class = CategorySerializer
 
     def get_queryset(self):
@@ -36,7 +35,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
             category_type = self.request.query_params.get('type')
             if category_type:
                 queryset = queryset.filter(category_type=category_type)
-            logger.info(f"CategoryViewSet: Filtered queryset {queryset.count()} categories with type={category_type}")
+                logger.info(f"CategoryViewSet: Filtered queryset {queryset.count()} categories with type={category_type}")
+            else:
+                logger.info(f"CategoryViewSet: Default filter applied, {queryset.count()} product categories")
             return queryset
         except Exception as e:
             logger.error(f"Erreur dans CategoryViewSet.get_queryset: {str(e)}", exc_info=True)

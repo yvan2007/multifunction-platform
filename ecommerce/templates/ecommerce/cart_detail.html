@@ -4,50 +4,29 @@
 {% block title %}Panier{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Votre panier</h2>
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
+<div class="container mt-5">
+    <h2>Votre Panier</h2>
     {% if cart_items %}
-        <table class="table">
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Produit</th>
                     <th>Prix unitaire</th>
                     <th>Quantité</th>
-                    <th>Prix total</th>
-                    <th>Action</th>
+                    <th>Total</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in cart_items %}
                     <tr>
+                        <td>{{ item.product.name }}</td>
                         <td>
-                            {% if is_authenticated %}
-                                {{ item.product.name }}
-                            {% else %}
-                                {{ item.product.name }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if is_authenticated %}
-                                {{ item.product.price }} FCFA
-                            {% else %}
-                                {{ item.product.price }} FCFA
-                            {% endif %}
+                            {{ item.product.price|floatformat:2 }} FCFA
                         </td>
                         <td>{{ item.quantity }}</td>
                         <td>
-                            {% if is_authenticated %}
-                                {{ item.product.price|floatformat:2|multiply:item.quantity }} FCFA
-                            {% else %}
-                                {{ item.total_price|floatformat:2 }} FCFA
-                            {% endif %}
+                            {{ item.get_total_price|floatformat:2 }} FCFA
                         </td>
                         <td>
                             <form method="post" action="{% url 'orders:remove_from_cart' item.product.id %}">
@@ -59,10 +38,12 @@
                 {% endfor %}
             </tbody>
         </table>
-        <p><strong>Total : </strong>{{ total_amount|floatformat:2 }} FCFA</p>
-        <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer à la caisse</a>
+        <div class="text-end">
+            <h4>Total: {{ cart_items|length }} article(s) - {{ total_price|floatformat:2 }} FCFA</h4>
+            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer à la caisse</a>
+        </div>
     {% else %}
-        <p>Votre panier est vide.</p>
+        <p class="text-muted">Votre panier est vide.</p>
         <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
     {% endif %}
 </div>

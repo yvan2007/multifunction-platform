@@ -1,32 +1,56 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2>Détails de la commande #{{ order.id }}</h2>
-    <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
-    <p><strong>Montant total :</strong> {{ order.total_amount }} €</p>
-    <p><strong>Statut :</strong> {{ order.status }}</p>
-    <h3>Articles</h3>
-    <table class="table">
+    <h1>Détails de la commande #{{ order.id }}</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Informations de la commande</h5>
+            <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+            <p><strong>Total :</strong> {{ order.total_price|floatformat:2 }} FCFA</p>
+            <p><strong>Statut :</strong>
+                {% if order.status == 'pending' %}
+                    En attente
+                {% elif order.status == 'processing' %}
+                    En cours de traitement
+                {% elif order.status == 'shipped' %}
+                    Expédiée
+                {% elif order.status == 'delivered' %}
+                    Livrée
+                {% elif order.status == 'cancelled' %}
+                    Annulée
+                {% endif %}
+            </p>
+            <p><strong>Adresse de livraison :</strong> {{ order.address.street_address }}, {{ order.address.city }}, {{ order.address.country }}</p>
+        </div>
+    </div>
+
+    <h3>Articles commandés</h3>
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>Produit</th>
+                <th>Prix unitaire (FCFA)</th>
                 <th>Quantité</th>
-                <th>Prix unitaire</th>
-                <th>Prix total</th>
+                <th>Total (FCFA)</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in order.ecommerce_items.all %}  <!-- Changé de 'orders_items' à 'ecommerce_items' -->
+            {% for item in order.items.all %}
                 <tr>
                     <td>{{ item.product.name }}</td>
+                    <td>{{ item.price|floatformat:2 }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>{{ item.unit_price }} €</td>
-                    <td>{{ item.total_price }} €</td>
+                    <td>{{ item.total_price|floatformat:2 }}</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    <a href="{% url 'users:orders' %}" class="btn btn-secondary">Retour à mes commandes</a>
+
+    <div class="text-end">
+        <a href="{% url 'orders:order_history' %}" class="btn btn-secondary">Retour à l'historique</a>
+    </div>
 </div>
 {% endblock %}

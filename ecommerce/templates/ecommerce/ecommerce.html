@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Sidebar for categories -->
+        <div class="col-md-3">
+            <h3>Catégories</h3>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="{% url 'ecommerce:ecommerce' %}">Toutes les catégories</a>
+                </li>
+                {% for category in categories %}
+                    <li class="list-group-item">
+                        <a href="{% url 'ecommerce:ecommerce' %}?category={{ category.id }}">{{ category.name }}</a>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">Aucune catégorie disponible.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Product list -->
+        <div class="col-md-9">
+            <!-- Special Offer Banner -->
+            <div class="card mb-4" style="background-color: #007bff; color: white;">
+                <div class="card-body">
+                    <h3>Offre Spéciale</h3>
+                    <p>Découvrez nos nouveaux produits avec des réductions exclusives !</p>
+                    <a href="#" class="btn btn-light">Voir les offres</a>
+                </div>
+            </div>
+
+            <h2>Nos Produits</h2>
+            <div class="row" id="product-list">
+                {% for product in products %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <img src="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;" loading="lazy">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text">{{ product.price|floatformat:2 }} FCFA</p>
+                                <a href="{% url 'ecommerce:product_detail' product.slug %}" class="btn btn-primary">Voir les détails</a>
+                                <a href="{% url 'ecommerce:add_to_cart' product.id %}" class="btn btn-success">Ajouter au panier</a>
+                                <a href="{% url 'users:favorites' %}?product_id={{ product.id }}&action=add" class="btn btn-outline-danger"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>Aucun produit disponible.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
