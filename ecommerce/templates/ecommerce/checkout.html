@@ -1,50 +1,33 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Paiement{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'ecommerce/js/checkout.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Paiement</h2>
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
+<div class="container mt-5">
+    <h2>Finaliser votre commande</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_country">Pays</label>
+            <select name="country" id="id_country" class="form-control" required>
+                <option value="">Sélectionnez un pays</option>
+                <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                <option value="France">France</option>
+                <option value="Sénégal">Sénégal</option>
+                <!-- Add more countries as needed -->
+            </select>
         </div>
-    {% endif %}
-    {% if cart.items.all %}
-        <h3>Votre panier</h3>
-        <ul>
-            {% for item in cart.items.all %}
-                <li>{{ item.product.name }} - {{ item.product.price }} FCFA (Quantité: {{ item.quantity }})</li>
-            {% endfor %}
-        </ul>
-        <p><strong>Total : </strong>{{ cart.total_amount|floatformat:2 }} FCFA</p>
-
-        <h3>Adresse de livraison</h3>
-        {% if addresses %}
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="address_id" class="form-label">Sélectionnez une adresse :</label>
-                    <select name="address_id" id="address_id" class="form-select" required>
-                        <option value="" disabled selected>Choisissez une adresse</option>
-                        {% for address in addresses %}
-                            <option value="{{ address.id }}">{{ address.street }}, {{ address.city }}, {{ address.postal_code }}, {{ address.country }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Confirmer la commande</button>
-            </form>
-            <a href="{% url 'users:account_settings' %}" class="btn btn-secondary mt-2">Gérer les adresses</a>
-        {% else %}
-            <p>Aucune adresse enregistrée.</p>
-            <a href="{% url 'users:account_settings' %}" class="btn btn-primary">Ajouter une adresse</a>
-        {% endif %}
-    {% else %}
-        <p>Votre panier est vide.</p>
-        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
-    {% endif %}
+        <div class="form-group">
+            <label for="id_city">Ville</label>
+            <select name="city" id="id_city" class="form-control" required>
+                <option value="">Sélectionnez une ville</option>
+            </select>
+        </div>
+        <!-- Add other fields as needed -->
+        <button type="submit" class="btn btn-primary">Confirmer la commande</button>
+    </form>
 </div>
 {% endblock %}

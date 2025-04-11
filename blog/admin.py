@@ -11,6 +11,10 @@ class ArticleAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'article', 'created_at')
+    list_display = ('get_author', 'article', 'created_at')  # Remplacez 'user' par 'get_author'
     list_filter = ('created_at',)
     search_fields = ('content',)
+
+    def get_author(self, obj):
+        return obj.author.username
+    get_author.short_description = 'Auteur'

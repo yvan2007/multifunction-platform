@@ -1,0 +1,60 @@
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.product-card img {
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.product-card .card-body {
+    padding: 15px;
+    text-align: center;
+}
+
+.product-card .card-title {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.product-card .card-text {
+    font-size: 1.1rem;
+    color: #e91e63;
+    margin-bottom: 15px;
+}
+
+.product-card .btn {
+    margin: 5px;
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.product-card .btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.product-card .btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.product-card .btn-outline-danger {
+    border-radius: 50%;
+    padding: 5px;
+}

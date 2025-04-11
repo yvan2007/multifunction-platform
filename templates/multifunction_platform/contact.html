@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact - Portfolio Multifonction{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contact Section */
+    .contact_section {
+        padding: 100px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .contact_section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/contact-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+
+    /* Form Styling */
+    .form-container {
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .form-container:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+    .form-group input,
+    .form-group textarea {
+        border: none;
+        border-bottom: 2px solid #e6f0fa;
+        border-radius: 0;
+        padding: 15px 20px;
+        font-size: 1.1rem;
+        color: #2d3748;
+        background: #f5f7fa;
+        transition: all 0.3s ease;
+        resize: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-bottom: 2px solid #4a90e2;
+        background: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: #666;
+        font-weight: 500;
+        opacity: 0.7;
+    }
+    .form-group i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #4a90e2;
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+    }
+    .form-group input:focus + i,
+    .form-group textarea:focus + i {
+        color: #f7c948;
+    }
+    .form-group.input-with-icon input,
+    .form-group.input-with-icon textarea {
+        padding-left: 45px;
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 14px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    .btn-primary i {
+        margin-left: 10px;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Contact Info Styling */
+    .contact-info {
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .contact-info:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    .contact-info h5 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    .contact-info h5::after {
+        content: '';
+        width: 40px;
+        height: 3px;
+        background: #f7c948;
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+    }
+    .contact-info p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    .contact-info i {
+        font-size: 1.5rem;
+        color: #4a90e2;
+        margin-right: 15px;
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .contact-info p:hover i {
+        color: #f7c948;
+        transform: scale(1.2);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 767px) {
+        .contact-info {
+            margin-top: 40px;
+        }
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .form-container,
+        .contact-info {
+            padding: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="contact_section layout_padding">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Contact - Nous</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" data-aos="fade-up">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <div class="row">
+            <!-- Form Section -->
+            <div class="col-md-6 portfolio-item" data-aos="fade-right">
+                <div class="form-container">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group input-with-icon">
+                            <input type="text" name="name" class="form-control" placeholder="Votre Nom" required>
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="form-group input-with-icon">
+                            <input type="email" name="email" class="form-control" placeholder="Votre Email" required>
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="form-group input-with-icon">
+                            <input type="text" name="subject" class="form-control" placeholder="Sujet" required>
+                            <i class="fa-solid fa-tag"></i>
+                        </div>
+                        <div class="form-group input-with-icon">
+                            <textarea name="message" class="form-control" rows="5" placeholder="Votre Message" required></textarea>
+                            <i class="fa-solid fa-message"></i>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Envoyer <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <!-- Contact Info Section -->
+            <div class="col-md-6 portfolio-item" data-aos="fade-left">
+                <div class="contact-info">
+                    <h5>Nos Coordonnées</h5>
+                    <p><i class="fa-solid fa-map-marker-alt"></i> 123 Rue Exemple, 75001 Paris, France</p>
+                    <p><i class="fa-solid fa-phone"></i> +33 1 23 45 67 89</p>
+                    <p><i class="fa-solid fa-envelope"></i> contact@portfoliomultifonction.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

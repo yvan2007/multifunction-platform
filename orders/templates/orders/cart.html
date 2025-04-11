@@ -1,58 +1,217 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
-{% load cart_tags %}
+
+{% block title %}Votre Panier{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .cart-section {
+        padding: 50px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .cart-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/blog-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .table {
+        background-color: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 15px;
+        font-size: 1.1rem;
+        color: #2d3748;
+    }
+    .table th {
+        background: #4a90e2;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .table img {
+        border-radius: 5px;
+    }
+    .cart-summary {
+        text-align: right;
+        margin-top: 30px;
+    }
+    .cart-summary .summary-box {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    .cart-summary .summary-box p {
+        margin: 10px 0;
+        font-size: 1.2rem;
+        color: #2d3748;
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success {
+        background: #28a745;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-danger {
+        background: #e63946;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+        background: #d00000;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn i {
+        margin-right: 8px;
+    }
+    .empty-cart {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        margin-top: 40px;
+    }
+    @media (max-width: 768px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .cart-summary {
+            text-align: center;
+        }
+        .btn-primary,
+        .btn-success,
+        .btn-danger {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Votre panier</h1>
-
-    {% if cart_items %}
-        <table class="table table-striped">
+<section class="cart-section">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Votre Panier</h2>
+        {% if cart_items %}
+        <table class="table table-striped" data-aos="fade-up">
             <thead>
                 <tr>
-                    <th>Image</th>
                     <th>Produit</th>
-                    <th>Prix unitaire (FCFA)</th>
                     <th>Quantité</th>
-                    <th>Total (FCFA)</th>
+                    <th>Prix Unitaire</th>
+                    <th>Total</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in cart_items %}
-                    <tr>
-                        <td>
-                            {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="max-width: 50px;">
-                            {% else %}
-                                Aucune image
-                            {% endif %}
-                        </td>
-                        <td>{{ item.product.name }}</td>
-                        <td>{{ item.product.price }}</td>
-                        <td>
-                            <form method="POST" action="{% url 'orders:update_cart' item.product.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" style="width: 60px;">
-                                <button type="submit" class="btn btn-sm btn-primary">Mettre à jour</button>
-                            </form>
-                        </td>
-                        <td>{{ item.product.price|floatformat:2|multiply:item.quantity }}</td>
-                        <td>
-                            <a href="{% url 'orders:remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger">Supprimer</a>
-                        </td>
-                    </tr>
+                <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                    <td>
+                        {% if item.product.primary_image %}
+                        <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                        {% else %}
+                        <img src="{% static 'images/default-product.jpg' %}" alt="Image par défaut" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                        {% endif %}
+                        {{ item.product.name }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'orders:update_cart' item.product.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="0" style="width: 60px; padding: 5px; border-radius: 5px; border: 2px solid #e6f0fa;">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
+                        </form>
+                    </td>
+                    <td>{{ item.product.price|floatformat:2 }} FCFA</td>
+                    <td>{{ item.total_price|floatformat:2 }} FCFA</td>
+                    <td>
+                        <a href="{% url 'orders:remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </a>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <div class="text-end">
-            <h4>Total : {{ total_price|floatformat:2 }} FCFA</h4>
-            <a href="{% url 'orders:checkout' %}" class="btn btn-success">Passer la commande</a>
+        <div class="cart-summary" data-aos="fade-up">
+            <div class="summary-box">
+                <p><strong>Sous-total :</strong> <span id="subtotal">{{ total_price|floatformat:2 }}</span> FCFA</p>
+                <p><strong>Frais de livraison :</strong> <span id="delivery-cost">0,00</span> FCFA</p>
+                <p><strong>Total :</strong> <span id="total-price">{{ total_price|floatformat:2 }}</span> FCFA</p>
+            </div>
+            <a href="{% url 'orders:checkout' %}" class="btn btn-success"><i class="fas fa-check"></i> Passer à la Caisse</a>
         </div>
-    {% else %}
-        <p>Votre panier est vide.</p>
-        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
-    {% endif %}
-</div>
+        {% else %}
+        <p class="empty-cart" data-aos="fade-up">Votre panier est vide.</p>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+            <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Continuer vos achats</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

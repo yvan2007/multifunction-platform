@@ -1,133 +1,329 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tableau de bord du gestionnaire{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .dashboard-section {
+        padding: 50px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .dashboard-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/blog-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .card {
+        background: #ffffff;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        position: relative;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    .card-body {
+        padding: 25px;
+    }
+    .card-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 15px;
+    }
+    .card-text {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    .recent-section h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 20px;
+    }
+    .recent-section .card {
+        margin-bottom: 15px;
+    }
+    .recent-section .card-body p {
+        font-size: 1rem;
+        color: #666;
+        margin: 0;
+    }
+    .no-items {
+        font-size: 1rem;
+        color: #666;
+        font-style: italic;
+    }
+    .btn-outline-primary {
+        border: 2px solid #4a90e2;
+        color: #4a90e2;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-outline-primary:hover,
+    .btn-outline-primary.active {
+        background: #4a90e2;
+        color: #ffffff;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success {
+        background: #28a745;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-warning {
+        background: #f7c948;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #2d3748;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-warning:hover {
+        background: #e6b800;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-danger {
+        background: #e63946;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+        background: #d00000;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    @media (max-width: 767px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .card {
+            margin-bottom: 30px;
+        }
+        .card-title {
+            font-size: 1.3rem;
+        }
+        .card-text {
+            font-size: 1.5rem;
+        }
+        .btn-primary,
+        .btn-success,
+        .btn-warning,
+        .btn-danger,
+        .btn-outline-primary {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        .recent-section h3 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <!-- Titre -->
-    <h2 class="text-center mb-4">Tableau de bord du gestionnaire</h2>
+<section class="dashboard-section">
+    <div class="container position-relative">
+        <!-- Titre -->
+        <h2 class="section-title" data-aos="fade-down">Tableau de bord du gestionnaire</h2>
 
-    <!-- Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" data-aos="fade-up">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Options de filtrage -->
+        <div class="mb-4 text-center" data-aos="fade-up">
+            <a href="?filter=newest" class="btn btn-outline-primary {% if filter_type == 'newest' %}active{% endif %}">Nouveaux ajouts</a>
+            <a href="?filter=alpha" class="btn btn-outline-primary {% if filter_type == 'alpha' %}active{% endif %}">Ordre alphabétique</a>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mb-5">
+            <!-- Articles -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="0">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-newspaper fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Articles</h5>
+                        <p class="card-text">{{ article_count }}</p>
+                        <a href="{% url 'users:manage_articles' %}" class="btn btn-primary">Gérer</a>
+                    </div>
+                </div>
             </div>
-        {% endfor %}
-    {% endif %}
+            <!-- Catégories -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-folder fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Catégories</h5>
+                        <p class="card-text">{{ category_count }}</p>
+                        <a href="{% url 'users:manage_categories' %}" class="btn btn-success">Gérer</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Produits -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-box fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Produits</h5>
+                        <p class="card-text">{{ product_count }}</p>
+                        <a href="{% url 'users:manage_products' %}" class="btn btn-warning">Gérer</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Commandes -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-cart fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Commandes</h5>
+                        <p class="card-text">{{ order_count }}</p>
+                        <a href="{% url 'users:manage_orders' %}" class="btn btn-danger">Gérer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <!-- Options de filtrage -->
-    <div class="mb-4 text-center">
-        <a href="?filter=newest" class="btn btn-outline-primary {% if filter_type == 'newest' %}active{% endif %}">Nouveaux ajouts</a>
-        <a href="?filter=alpha" class="btn btn-outline-primary {% if filter_type == 'alpha' %}active{% endif %}">Ordre alphabétique</a>
+        <!-- Sections détaillées -->
+        <div class="row">
+            <!-- Catégories récentes -->
+            <div class="col-md-3 mb-4 recent-section" data-aos="fade-up">
+                <h3>Catégories récentes</h3>
+                {% for category in recent_categories %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p>{{ category.name }} (Ajoutée le {{ category.created_at|date:"d M Y" }})</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-items">Aucune catégorie récente.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Articles récents -->
+            <div class="col-md-3 mb-4 recent-section" data-aos="fade-up">
+                <h3>Articles récents</h3>
+                {% for article in recent_articles %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p>{{ article.title }} (Créé le {{ article.created_at|date:"d M Y" }})</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-items">Aucune article récent.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Produits récents -->
+            <div class="col-md-3 mb-4 recent-section" data-aos="fade-up">
+                <h3>Produits récents</h3>
+                {% for product in recent_products %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p>{{ product.name }} (Ajouté le {{ product.created_at|date:"d M Y" }})</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-items">Aucun produit récent.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Commandes récentes -->
+            <div class="col-md-3 mb-4 recent-section" data-aos="fade-up">
+                <h3>Commandes récentes</h3>
+                {% for order in recent_orders %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p>Commande #{{ order.id }} par {{ order.user.username }} ({{ order.created_at|date:"d M Y" }})</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="no-items">Aucune commande récente.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-
-    <!-- Statistiques -->
-    <div class="row mb-5">
-        <!-- Articles -->
-        <div class="col-md-3 mb-4">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <i class="fas fa-newspaper fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">Articles</h5>
-                    <p class="card-text display-4">{{ article_count }}</p>
-                    <a href="{% url 'users:manage_articles' %}" class="btn btn-primary">Gérer</a>
-                </div>
-            </div>
-        </div>
-        <!-- Catégories -->
-        <div class="col-md-3 mb-4">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <i class="fas fa-folder fa-3x text-success mb-3"></i>
-                    <h5 class="card-title">Catégories</h5>
-                    <p class="card-text display-4">{{ category_count }}</p>
-                    <a href="{% url 'users:manage_categories' %}" class="btn btn-success">Gérer</a>
-                </div>
-            </div>
-        </div>
-        <!-- Produits -->
-        <div class="col-md-3 mb-4">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <i class="fas fa-box fa-3x text-warning mb-3"></i>
-                    <h5 class="card-title">Produits</h5>
-                    <p class="card-text display-4">{{ product_count }}</p>
-                    <a href="{% url 'users:manage_products' %}" class="btn btn-warning">Gérer</a>
-                </div>
-            </div>
-        </div>
-        <!-- Commandes -->
-        <div class="col-md-3 mb-4">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <i class="fas fa-shopping-cart fa-3x text-danger mb-3"></i>
-                    <h5 class="card-title">Commandes</h5>
-                    <p class="card-text display-4">{{ order_count }}</p>
-                    <a href="{% url 'users:manage_orders' %}" class="btn btn-danger">Gérer</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sections détaillées -->
-    <div class="row">
-        <!-- Catégories récentes -->
-        <div class="col-md-3 mb-4 recent-section">
-            <h3>Catégories récentes</h3>
-            {% for category in recent_categories %}
-            <div class="card">
-                <div class="card-body">
-                    <p>{{ category.name }} (Ajoutée le {{ category.created_at|date:"d M Y" }})</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-muted">Aucune catégorie récente.</p>
-            {% endfor %}
-        </div>
-
-        <!-- Articles récents -->
-        <div class="col-md-3 mb-4 recent-section">
-            <h3>Articles récents</h3>
-            {% for article in recent_articles %}
-            <div class="card">
-                <div class="card-body">
-                    <p>{{ article.title }} (Créé le {{ article.created_at|date:"d M Y" }})</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-muted">Aucun article récent.</p>
-            {% endfor %}
-        </div>
-
-        <!-- Produits récents -->
-        <div class="col-md-3 mb-4 recent-section">
-            <h3>Produits récents</h3>
-            {% for product in recent_products %}
-            <div class="card">
-                <div class="card-body">
-                    <p>{{ product.name }} (Ajouté le {{ product.created_at|date:"d M Y" }})</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-muted">Aucun produit récent.</p>
-            {% endfor %}
-        </div>
-
-        <!-- Commandes récentes -->
-        <div class="col-md-3 mb-4 recent-section">
-            <h3>Commandes récentes</h3>
-            {% for order in recent_orders %}
-            <div class="card">
-                <div class="card-body">
-                    <p>Commande #{{ order.id }} par {{ order.user.username }} ({{ order.created_at|date:"d M Y" }})</p>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-muted">Aucune commande récente.</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+</section>
 {% endblock %}

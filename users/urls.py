@@ -8,7 +8,7 @@ urlpatterns = [
     # Authentication routes
     path('login/', views.login_view, name='login'),
     path('manager-login/', views.manager_login_view, name='manager_login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page=reverse_lazy('users:login')), name='logout'),
     path('register/', views.register, name='register'),
 
     # Password reset flow
@@ -45,12 +45,16 @@ urlpatterns = [
     path('manager-dashboard/', views.manager_dashboard, name='manager_dashboard'),
     path('manage-articles/', views.manage_articles, name='manage_articles'),
     path('manage-articles/edit/<int:article_id>/', views.edit_article, name='edit_article'),
+    path('manage-articles/add/', views.add_article, name='add_article'),
     path('manage-categories/', views.manage_categories, name='manage_categories'),
     path('manage-categories/edit/<int:category_id>/', views.edit_category, name='edit_category'),
+    path('manage-categories/add/', views.add_category, name='add_category'),
     path('manage-products/', views.manage_products, name='manage_products'),
     path('manage-products/add/', views.add_product, name='add_product'),
+    path('manage-products/edit/<int:product_id>/', views.edit_product, name='edit_product'),
     path('manage-orders/', views.manage_orders, name='manage_orders'),
-    path('manage-categories/add/', views.add_category, name='add_category'),
-    path('manage-articles/add/', views.add_article, name='add_article'),
-    path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
+    path('manage-orders/update/<int:order_id>/', views.manager_update_order_status, name='manager_update_order_status'),
+    path('manage-orders/delete/<int:order_id>/', views.manager_delete_order, name='manager_delete_order'),
+    path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('manager-update-order-status/<int:order_id>/', views.manager_update_order_status, name='manager_update_order_status'),
 ]

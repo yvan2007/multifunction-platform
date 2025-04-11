@@ -7,10 +7,10 @@ from django.conf import settings
 from django.db.models import Q
 from django.contrib import messages as django_messages
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.contrib.auth.views import PasswordResetView
 
 # Import des modèles
-from .models import CustomUser, UserProfile, Address, Favorite, Message
+from .models import CustomUser, Profile, Address, Favorite, Message
 from ecommerce.models import Category, Product, Cart, CartItem
 from orders.models import Order
 from blog.models import Article
@@ -18,7 +18,7 @@ from blog.models import Article
 # Import des formulaires
 from .forms import (
     CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm,
-    ProductForm, ProductImageForm, UserProfileForm, AddressForm, ArticleForm, CategoryForm
+    ProductForm, ProductImageForm, ProfileForm, AddressForm, ArticleForm, CategoryForm
 )
 
 import random
@@ -68,6 +68,12 @@ def validate_login_credentials(request, form, is_manager_login=False):
 
     return user, password
 
+def get_cart_item_count(user):
+    """Calcule le nombre d'articles dans le panier de l'utilisateur."""
+    if user.is_authenticated:
+        return CartItem.objects.filter(cart__user=user).count()
+    return 0
+
 # ------------------- Vues pour l'authentification -------------------
 
 def login_view(request):
@@ -101,7 +107,7 @@ def login_view(request):
     else:
         form = CustomAuthenticationForm()
 
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, 'users/login.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
 def manager_login_view(request):
     """Connexion pour les gestionnaires avec 2FA."""
@@ -124,8 +130,8 @@ def manager_login_view(request):
                 return redirect('users:manager_dashboard')
             else:
                 django_messages.error(request, "Code 2FA incorrect.")
-                return render(request, 'users/manager_login_2fa.html')
-        return render(request, 'users/manager_login_2fa.html')
+                return render(request, 'users/manager_login_2fa.html', {'cart_item_count': get_cart_item_count(request.user)})
+        return render(request, 'users/manager_login_2fa.html', {'cart_item_count': get_cart_item_count(request.user)})
 
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
@@ -134,10 +140,10 @@ def manager_login_view(request):
             secret_code = form.cleaned_data.get('secret_code')
             if not secret_code:
                 django_messages.error(request, "Le code secret est requis pour les gestionnaires.")
-                return render(request, 'users/manager_login.html', {'form': form})
+                return render(request, 'users/manager_login.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
             if secret_code != user.secret_code:
                 django_messages.error(request, "Code secret incorrect.")
-                return render(request, 'users/manager_login.html', {'form': form})
+                return render(request, 'users/manager_login.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
             code = ''.join(random.choices(string.digits, k=6))
             request.session['2fa_code'] = code
@@ -154,12 +160,12 @@ def manager_login_view(request):
                 django_messages.info(request, "Un code de vérification a été envoyé à votre email.")
             except Exception as e:
                 django_messages.error(request, "Erreur lors de l'envoi du code 2FA. Veuillez réessayer plus tard.")
-                return render(request, 'users/manager_login.html', {'form': form})
-            return render(request, 'users/manager_login_2fa.html')
+                return render(request, 'users/manager_login.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
+            return render(request, 'users/manager_login_2fa.html', {'cart_item_count': get_cart_item_count(request.user)})
     else:
         form = CustomAuthenticationForm()
 
-    return render(request, 'users/manager_login.html', {'form': form})
+    return render(request, 'users/manager_login.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
 def register(request):
     """Inscription pour les utilisateurs (clients ou gestionnaires)."""
@@ -171,7 +177,7 @@ def register(request):
             if form.is_valid():
                 user = form.save(commit=False)
                 user.is_manager = True
-                user.generate_secret_code()  # Méthode supposée dans CustomUser
+                user.generate_secret_code()  # Méthode définie dans CustomUser
                 user.save()
                 try:
                     send_mail(
@@ -194,9 +200,9 @@ def register(request):
                 username = form.cleaned_data.get('username')
                 if CustomUser.objects.filter(username=username).exists():
                     django_messages.error(request, "Ce nom d'utilisateur est déjà pris.")
-                    return render(request, 'users/register.html', {'form': form, 'user_type': user_type})
+                    return render(request, 'users/register.html', {'form': form, 'user_type': user_type, 'cart_item_count': get_cart_item_count(request.user)})
                 user = form.save()
-                UserProfile.objects.create(user=user)
+                Profile.objects.create(user=user)
                 password = form.cleaned_data.get('password1')
                 user = authenticate(request, username=username, password=password)
                 if user is not None:
@@ -209,7 +215,7 @@ def register(request):
         else:
             form = CustomUserCreationForm()
 
-    return render(request, 'users/register.html', {'form': form, 'user_type': user_type})
+    return render(request, 'users/register.html', {'form': form, 'user_type': user_type, 'cart_item_count': get_cart_item_count(request.user)})
 
 class CustomPasswordResetView(PasswordResetView):
     """Vue personnalisée pour la réinitialisation du mot de passe."""
@@ -242,6 +248,7 @@ class CustomPasswordResetView(PasswordResetView):
         context['title_text'] = title_text
         context['heading_text'] = heading_text
         context['description_text'] = description_text
+        context['cart_item_count'] = get_cart_item_count(self.request.user)  # Added
         return context
 
     def form_valid(self, form):
@@ -267,30 +274,27 @@ class CustomPasswordResetView(PasswordResetView):
 @login_required
 def profile(request):
     """Afficher le profil de l'utilisateur."""
-    return render(request, 'users/profile.html', {'user': request.user})
+    return render(request, 'users/profile.html', {'user': request.user, 'cart_item_count': get_cart_item_count(request.user)})
 
 @login_required
 def edit_profile(request):
-    """Modifier le profil de l'utilisateur."""
     if request.method == 'POST':
-        user = request.user
-        user.first_name = request.POST.get('first_name')
-        user.last_name = request.POST.get('last_name')
-        user.email = request.POST.get('email')
-        user.username = request.POST.get('username')
-        user.save()
-        django_messages.success(request, 'Profil mis à jour avec succès.')
-        return redirect('users:profile')
-    return render(request, 'users/edit_profile.html', {'user': request.user})
+        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            return redirect('users:profile')
+    else:
+        form = ProfileForm(instance=request.user.profile)
+    return render(request, 'users/edit_profile.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
 @login_required
 def account_settings(request):
     """Gérer les paramètres du compte (profil et adresses)."""
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile, created = Profile.objects.get_or_create(user=request.user)
     addresses = request.user.addresses.all()
 
     if request.method == 'POST':
-        profile_form = UserProfileForm(request.POST, instance=profile)
+        profile_form = ProfileForm(request.POST, instance=profile)
         address_form = AddressForm(request.POST)
         if profile_form.is_valid():
             profile_form.save()
@@ -302,13 +306,14 @@ def account_settings(request):
             django_messages.success(request, "Adresse ajoutée avec succès !")
         return redirect('users:account_settings')
     else:
-        profile_form = UserProfileForm(instance=profile)
+        profile_form = ProfileForm(instance=profile)
         address_form = AddressForm()
 
     return render(request, 'users/account_settings.html', {
         'profile_form': profile_form,
         'address_form': address_form,
         'addresses': addresses,
+        'cart_item_count': get_cart_item_count(request.user),
     })
 
 @login_required
@@ -326,7 +331,7 @@ def favorites(request):
             Favorite.objects.filter(user=request.user, product=product).delete()
             django_messages.success(request, f"{product.name} retiré des favoris !")
         return redirect('users:favorites')
-    return render(request, 'users/favorites.html', {'favorites': favorites})
+    return render(request, 'users/favorites.html', {'favorites': favorites, 'cart_item_count': get_cart_item_count(request.user)})
 
 @login_required
 def user_messages(request):
@@ -336,13 +341,14 @@ def user_messages(request):
     return render(request, 'users/messages.html', {
         'sent_messages': sent_messages,
         'received_messages': received_messages,
+        'cart_item_count': get_cart_item_count(request.user),
     })
 
 @login_required
 def orders(request):
     """Afficher les commandes de l'utilisateur."""
     orders = Order.objects.filter(user=request.user)
-    return render(request, 'users/orders.html', {'orders': orders})
+    return render(request, 'users/orders.html', {'orders': orders, 'cart_item_count': get_cart_item_count(request.user)})
 
 # ------------------- Vues pour les gestionnaires -------------------
 
@@ -377,6 +383,7 @@ def manager_dashboard(request):
         'recent_orders': recent_orders,
         'recent_categories': recent_categories,
         'filter_type': filter_type,
+        'cart_item_count': get_cart_item_count(request.user),
     }
     return render(request, 'users/manager_dashboard.html', context)
 
@@ -411,7 +418,11 @@ def manage_articles(request):
     else:
         form = ArticleForm()
 
-    return render(request, 'users/manage_articles.html', {'articles': articles, 'form': form})
+    return render(request, 'users/manage_articles.html', {
+        'articles': articles,
+        'form': form,
+        'cart_item_count': get_cart_item_count(request.user),
+    })
 
 @manager_required
 def add_article(request):
@@ -433,7 +444,7 @@ def add_article(request):
             return redirect('users:manage_articles')
     else:
         form = ArticleForm()
-    return render(request, 'users/add_article.html', {'form': form})
+    return render(request, 'users/add_article.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
 @manager_required
 def edit_article(request, article_id):
@@ -447,7 +458,7 @@ def edit_article(request, article_id):
             return redirect('users:manage_articles')
     else:
         form = ArticleForm(instance=article)
-    return render(request, 'users/edit_article.html', {'form': form, 'article': article})
+    return render(request, 'users/edit_article.html', {'form': form, 'article': article, 'cart_item_count': get_cart_item_count(request.user)})
 
 # Gestion des catégories
 @manager_required
@@ -487,6 +498,7 @@ def manage_categories(request):
         'categories': categories,
         'form': form,
         'filter_type': filter_type,
+        'cart_item_count': get_cart_item_count(request.user),
     })
 
 @manager_required
@@ -502,7 +514,7 @@ def add_category(request):
             return redirect('users:manage_categories')
     else:
         form = CategoryForm()
-    return render(request, 'users/add_category.html', {'form': form})
+    return render(request, 'users/add_category.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
 
 @manager_required
 def edit_category(request, category_id):
@@ -516,7 +528,7 @@ def edit_category(request, category_id):
             return redirect('users:manage_categories')
     else:
         form = CategoryForm(instance=category)
-    return render(request, 'users/edit_category.html', {'form': form, 'category': category})
+    return render(request, 'users/edit_category.html', {'form': form, 'category': category, 'cart_item_count': get_cart_item_count(request.user)})
 
 # Gestion des produits
 @manager_required
@@ -571,6 +583,7 @@ def manage_products(request):
         'filter_type': filter_type,
         'form': form,
         'image_form': image_form,
+        'cart_item_count': get_cart_item_count(request.user),
     })
 
 @manager_required
@@ -598,7 +611,7 @@ def add_product(request):
     else:
         form = ProductForm()
         image_form = ProductImageForm()
-    return render(request, 'users/add_product.html', {'form': form, 'image_form': image_form})
+    return render(request, 'users/add_product.html', {'form': form, 'image_form': image_form, 'cart_item_count': get_cart_item_count(request.user)})
 
 @manager_required
 def edit_product(request, product_id):
@@ -620,19 +633,70 @@ def edit_product(request, product_id):
     else:
         form = ProductForm(instance=product)
         image_form = ProductImageForm()
-    return render(request, 'users/edit_product.html', {'form': form, 'image_form': image_form, 'product': product})
+    return render(request, 'users/edit_product.html', {'form': form, 'image_form': image_form, 'product': product, 'cart_item_count': get_cart_item_count(request.user)})
 
 # Gestion des commandes
 @manager_required
 def manage_orders(request):
     """Gérer les commandes (CRUD)."""
-    orders = Order.objects.all()
-    
+    orders = Order.objects.all().order_by('-created_at')  # Order by newest first
+    return render(request, 'users/manage_orders.html', {
+        'orders': orders,
+        'cart_item_count': get_cart_item_count(request.user)
+    })
+
+def manager_update_order_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
-        if 'delete' in request.POST:
-            order_id = request.POST.get('order_id')
-            order = get_object_or_404(Order, id=order_id)
-            order.delete()
-            django_messages.success(request, "Commande supprimée avec succès.")
-            return redirect('users:manage_orders')
-    return render(request, 'users/manage_orders.html', {'orders': orders})
+        new_status = request.POST.get('status')
+        if new_status in dict(Order.STATUS_CHOICES):
+            order.status = new_status
+            order.save()
+
+            # Send email notification if the status is "delivered"
+            if new_status == 'delivered':
+                subject = "Votre commande a été livrée !"
+                message = (
+                    f"Bonjour {order.user.username},\n\n"
+                    f"Nous sommes ravis de vous informer que votre commande (ID: {order.id}) "
+                    f"a été livrée avec succès le {order.created_at.strftime('%d/%m/%Y à %H:%M')}.\n"
+                    f"Montant total : {order.total_price} FCFA\n\n"
+                    f"Merci d'avoir choisi Multifunction !\n"
+                    f"Si vous avez des questions, n'hésitez pas à nous contacter à support@multifunction.com.\n\n"
+                    f"Cordialement,\nL'équipe Multifunction"
+                )
+                recipient_email = order.user.email
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [recipient_email],
+                    fail_silently=False,
+                )
+
+            django_messages.success(request, f"Statut de la commande {order.id} mis à jour avec succès.")
+        else:
+            django_messages.error(request, "Statut invalide.")
+    return redirect('users:manage_orders')
+
+@manager_required
+def manager_delete_order(request, order_id):
+    """Supprimer une commande."""
+    order = get_object_or_404(Order, id=order_id)
+    if request.method == 'POST':
+        order.delete()
+        django_messages.success(request, "Commande supprimée avec succès.")
+    return redirect('users:manage_orders')
+
+@login_required
+def cancel_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if request.method == 'POST':
+        # Only allow cancellation if the order is in "pending" or "processing" status
+        if order.status in ['pending', 'processing']:
+            order.status = 'cancelled'
+            order.save()
+            django_messages.success(request, f"Votre commande {order.id} a été annulée avec succès.")
+        else:
+            django_messages.error(request, "Cette commande ne peut pas être annulée.")
+    return redirect('users:orders')

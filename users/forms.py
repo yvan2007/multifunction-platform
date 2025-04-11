@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate
 from django_ckeditor_5.widgets import CKEditor5Widget
-from .models import CustomUser, UserProfile, Address
+from .models import CustomUser, Profile, Address
 from blog.models import Article, Category as BlogCategory
 from ecommerce.models import Category, Product, ProductImage
 
@@ -63,14 +63,10 @@ class ManagerCreationForm(CustomUserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2']
 
-class UserProfileForm(forms.ModelForm):
+class ProfileForm(forms.ModelForm):
     class Meta:
-        model = UserProfile
-        fields = ['phone_number', 'bio']
-        widgets = {
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control'}),
-        }
+        model = Profile  # Corrected: UserProfile → Profile
+        fields = ('bio', 'avatar')
 
 class AddressForm(forms.ModelForm):
     class Meta:

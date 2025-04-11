@@ -5,12 +5,16 @@ from users.models import CustomUser
 from ecommerce.models import Product, ProductImage, Testimonial, Review
 from blog.models import Article, Comment
 
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+class CustomAuthenticationForm(forms.Form):
+    login_field = forms.CharField(label="Nom d'utilisateur ou Email", max_length=254)
+    password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)
+    secret_code = forms.CharField(label="Code secret (pour les gestionnaires)", max_length=10, required=False)
 
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email', 'password1', 'password2']
+class CustomUserCreationForm(forms.Form):
+    username = forms.CharField(label="Nom d'utilisateur", max_length=150)
+    email = forms.EmailField(label="Email", required=True)
+    password1 = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirmer le mot de passe", widget=forms.PasswordInput)
 
 class ManagerCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -19,15 +23,7 @@ class ManagerCreationForm(UserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2']
 
-class CustomAuthenticationForm(AuthenticationForm):
-    login_field = forms.CharField(label="Nom d'utilisateur ou Email", max_length=254)
-    secret_code = forms.CharField(label="Code secret", max_length=50, required=False)
 
-    def clean_login_field(self):
-        login_field = self.cleaned_data.get('login_field')
-        if not login_field:
-            raise forms.ValidationError("Ce champ est requis.")
-        return login_field
 
 class ProductForm(forms.ModelForm):
     class Meta:

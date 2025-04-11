@@ -1,8 +1,6 @@
-# In ecommerce/forms.py
+# ecommerce/forms.py
 from django import forms
-from django.shortcuts import redirect, render
-from .models import Product
-from ecommerce.models import ProductImage
+from .models import Product, ProductImage, Review  # Ajoutez Review ici
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -12,18 +10,16 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'ckeditor5'}),
         }
 
-# In views.py
-def add_product(request):
-    from ecommerce.forms import ProductForm
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            product = form.save()
-            return redirect('index')
-    else:
-        form = ProductForm()
-    return render(request, 'add_product.html', {'form': form})
 class ProductImageForm(forms.ModelForm):
     class Meta:
         model = ProductImage
         fields = ['image', 'alt_text']
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Votre commentaire...'}),
+            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'placeholder': 'Note de 1 à 5'}),
+        }

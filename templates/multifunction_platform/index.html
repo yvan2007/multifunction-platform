@@ -1,0 +1,749 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil - Portfolio Multifonction{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* General Section Styling */
+    section {
+        padding: 80px 0;
+        position: relative;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+        padding: 100px 0 50px;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+    }
+    .welcome-section .lead {
+        font-size: 1.3rem;
+        color: #666;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    /* Hero Section (Carousel) */
+    .slider_section {
+        position: relative;
+        padding: 120px 0;
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.9), rgba(129, 195, 247, 0.7));
+        color: #ffffff;
+        overflow: hidden;
+    }
+    .slider_bg_box {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.2;
+    }
+    .slider_bg_box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .carousel-item {
+        padding: 50px 0;
+    }
+    .detail-box h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+        line-height: 1.2;
+    }
+    .detail-box h1 span {
+        color: #f7c948;
+    }
+    .detail-box p {
+        font-size: 1.3rem;
+        margin-bottom: 40px;
+        max-width: 500px;
+    }
+    .detail-box .btn-primary {
+        background: #f7c948;
+        border: none;
+        padding: 14px 40px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 50px;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .detail-box .btn-primary i {
+        margin-left: 10px;
+    }
+    .detail-box .btn-primary:hover {
+        background: #e6b800;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .carousel-item img {
+        max-height: 450px;
+        object-fit: cover;
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.5s ease;
+    }
+    .carousel-item img:hover {
+        transform: scale(1.05) rotate(2deg);
+    }
+    .carousel-indicators {
+        bottom: -60px;
+    }
+    .carousel-indicators li {
+        background-color: #ffffff;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin: 0 6px;
+        transition: all 0.3s ease;
+    }
+    .carousel-indicators .active {
+        background-color: #f7c948;
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Why Choose Us Section */
+    .why_section {
+        background-color: #ffffff;
+    }
+    .why_section .box {
+        background: #f5f7fa;
+        padding: 40px 20px;
+        border-radius: 20px;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .why_section .box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(247, 201, 72, 0.1));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .why_section .box:hover::before {
+        opacity: 1;
+    }
+    .why_section .box:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    .why_section .img-box i {
+        color: #4a90e2;
+        font-size: 3rem;
+        margin-bottom: 25px;
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .why_section .box:hover i {
+        color: #f7c948;
+        transform: scale(1.2);
+    }
+    .why_section h5 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 15px;
+    }
+    .why_section p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+
+    /* New Arrivals Section */
+    .arrival_section {
+        background-color: #f5f7fa;
+    }
+    .arrival_bg_box {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.9;
+    }
+    .arrival_bg_box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20px 0 0 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .content-box {
+        padding: 50px;
+        background: #ffffff;
+        border-radius: 0 20px 20px 0;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.4s ease;
+    }
+    .content-box:hover {
+        transform: translateX(15px);
+    }
+    .content-box p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    .content-box .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 12px 35px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .content-box .btn-primary i {
+        margin-left: 10px;
+    }
+    .content-box .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Products Section */
+    .shop_section .box {
+        position: relative;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s ease;
+    }
+    .shop_section .box:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    .shop_section .img-box img {
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 15px;
+        transition: transform 0.5s ease;
+    }
+    .shop_section .box:hover .img-box img {
+        transform: scale(1.05);
+    }
+    .shop_section .detail-box h6 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 15px 0 5px;
+    }
+    .shop_section .detail-box h6 span {
+        color: #f7c948;
+        font-weight: 700;
+    }
+    .shop_section .new {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #f7c948;
+        color: #2d3748;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .shop_section .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    .shop_section .btn-primary i {
+        margin-right: 8px;
+    }
+    .shop_section .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Articles Section */
+    .blog_section {
+        background: #f5f7fa;
+    }
+    .blog_section .box {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s ease;
+    }
+    .blog_section .box:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    .blog_section img {
+        max-height: 180px;
+        object-fit: cover;
+        border-radius: 15px;
+        transition: transform 0.5s ease;
+    }
+    .blog_section .box:hover img {
+        transform: scale(1.05);
+    }
+    .blog_section h5 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 15px 0 10px;
+    }
+    .blog_section p {
+        font-size: 1.1rem;
+        color: #666;
+        line-height: 1.6;
+    }
+
+    /* Subscribe Section */
+    .subscribe_section {
+        background: linear-gradient(135deg, #4a90e2, #81c3f7);
+        color: #ffffff;
+        padding: 100px 0;
+        position: relative;
+    }
+    .subscribe_section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/subscribe-bg-pattern.png" %}') repeat;
+        opacity: 0.1;
+        z-index: 0;
+    }
+    .subscribe_form {
+        position: relative;
+        z-index: 1;
+    }
+    .subscribe_form h3 {
+        color: #ffffff;
+    }
+    .subscribe_form h3::after {
+        background: #f7c948;
+    }
+    .subscribe_form p {
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+        color: #f5f7fa;
+    }
+    .subscribe_form .form-control {
+        border-radius: 50px 0 0 50px;
+        padding: 14px 25px;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    .subscribe_form .form-control:focus {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        outline: none;
+    }
+    .subscribe_form .btn-primary {
+        border-radius: 0 50px 50px 0;
+        padding: 14px 35px;
+        background: #f7c948;
+        border: none;
+        font-weight: 600;
+        color: #2d3748;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .subscribe_form .btn-primary i {
+        margin-left: 10px;
+    }
+    .subscribe_form .btn-primary:hover {
+        background: #e6b800;
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Testimonials Section */
+    .testimonial_section {
+        background: #ffffff;
+    }
+    .testimonial_section .carousel-item {
+        padding: 50px 0;
+    }
+    .testimonial_section img {
+        width: 120px !important;
+        height: 120px !important;
+        border: 4px solid #4a90e2;
+        transition: all 0.3s ease;
+    }
+    .testimonial_section .carousel-item:hover img {
+        border-color: #f7c948;
+        transform: rotate(5deg);
+    }
+    .testimonial_section h5 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 25px 0 15px;
+    }
+    .testimonial_section p {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    .carousel-control-prev, .carousel-control-next {
+        width: 5%;
+    }
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+        background-color: #4a90e2;
+        border-radius: 50%;
+        padding: 25px;
+        transition: background-color 0.3s ease;
+    }
+    .carousel-control-prev:hover .carousel-control-prev-icon,
+    .carousel-control-next:hover .carousel-control-next-icon {
+        background-color: #f7c948;
+    }
+    .carousel-indicators li {
+        background-color: #666;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    .carousel-indicators .active {
+        background-color: #f7c948;
+        width: 16px;
+        height: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<section class="welcome-section">
+    <div class="container text-center">
+        <h1 class="section-title" data-aos="fade-down">Bienvenue sur la plateforme</h1>
+        <p class="lead" data-aos="fade-up">
+            {% if user.is_authenticated %}
+                {% if user.is_manager %}
+                    Bonjour, Gestionnaire {{ user.username }} ! Gérer votre contenu depuis le tableau de bord.
+                {% else %}
+                    Bonjour, {{ user.username }} ! Explorez nos produits et articles.
+                {% endif %}
+            {% else %}
+                Découvrez nos produits et articles. Connectez-vous pour plus de fonctionnalités.
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<!-- Hero Section (Carousel) -->
+<section class="slider_section">
+    <div class="slider_bg_box">
+        <img src="{% static 'images/slider-bg.jpg' %}" alt="Fond du carrousel">
+    </div>
+    <div id="customCarousel1" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 col-lg-6">
+                            <div class="detail-box" data-aos="fade-left">
+                                <h1><span>Soldes 20% Off</span><br>Tout en stock</h1>
+                                <p>Découvrez nos produits phares avec des réductions exceptionnelles. Qualité garantie et livraison rapide !</p>
+                                <div class="btn-box">
+                                    <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">
+                                        Voir les produits <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-6" data-aos="fade-right">
+                            <img src="{% static 'images/8333225.jpg' %}" alt="Hero Image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 col-lg-6">
+                            <div class="detail-box" data-aos="fade-left">
+                                <h1><span>Nouveautés 2025</span><br>Collection Exclusive</h1>
+                                <p>Découvrez nos dernières créations, alliant style et innovation.</p>
+                                <div class="btn-box">
+                                    <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">
+                                        Découvrir <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-6" data-aos="fade-right">
+                            <img src="{% static 'images/amazed-surprised-young-guy-posing-against-white-wall.jpg' %}" alt="Hero Image 2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <ol class="carousel-indicators">
+                <li data-bs-target="#customCarousel1" data-bs-slide-to="0" class="active"></li>
+                <li data-bs-target="#customCarousel1" data-bs-slide-to="1"></li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why_section layout_padding">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-down">Pourquoi nous choisir</h2>
+        <div class="row">
+            <div class="col-md-4 portfolio-item" data-aos="fade-up">
+                <div class="box text-center">
+                    <div class="img-box">
+                        <i class="fa-solid fa-truck-fast fa-3x"></i>
+                    </div>
+                    <div class="detail-box">
+                        <h5>Livraison Rapide</h5>
+                        <p>Recevez vos produits en un temps record.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="100">
+                <div class="box text-center">
+                    <div class="img-box">
+                        <i class="fa-solid fa-truck fa-3x"></i>
+                    </div>
+                    <div class="detail-box">
+                        <h5>Livraison Gratuite</h5>
+                        <p>Profitez de la livraison offerte sur toutes les commandes.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="200">
+                <div class="box text-center">
+                    <div class="img-box">
+                        <i class="fa-solid fa-award fa-3x"></i>
+                    </div>
+                    <div class="detail-box">
+                        <h5>Meilleure Qualité</h5>
+                        <p>Des produits conçus pour durer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals Section -->
+<section class="arrival_section layout_padding">
+    <div class="container">
+        <div class="heading_container">
+            <h2 class="section-title" data-aos="fade-down">#Nouveautés</h2>
+        </div>
+        <div class="box portfolio-item" data-aos="fade-right">
+            <div class="row align-items-center position-relative">
+                <div class="col-md-6">
+                    <div class="arrival_bg_box">
+                        <img src="{% static 'images/arrival-bg.png' %}" alt="Fond Nouveautés">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="content-box">
+                        <p>
+                            {% if new_arrivals %}
+                                {% with new_product=new_arrivals.first %}
+                                    {% with description=new_product.description|striptags %}
+                                        {{ description|truncatewords:20 }}
+                                    {% endwith %}
+                                {% endwith %}
+                            {% else %}
+                                Découvrez nos dernières créations, alliant style et innovation.
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">
+                            Découvrir <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+<section class="shop_section layout_padding">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-down">Nos Produits</h2>
+        <div class="row">
+            {% for product in products %}
+            <div class="col-sm-6 col-md-4 col-lg-3 portfolio-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                <div class="box text-center">
+                    <a href="{% url 'ecommerce:product_detail' product.slug %}">
+                        <div class="img-box">
+                            {% if product.primary_image %}
+                                <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="{% static 'images/p1.png' %}" alt="{{ product.name }}">
+                            {% endif %}
+                        </div>
+                        <div class="detail-box">
+                            <h6>{{ product.name }}</h6>
+                            <h6>Prix <span>{{ product.price|floatformat:2 }} FCFA</span></h6>
+                        </div>
+                        <div class="new">
+                            <span>Nouveau</span>
+                        </div>
+                    </a>
+                    <form method="post" action="{% url 'orders:add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary mt-2">
+                            <i class="fa-solid fa-cart-plus"></i> Ajouter au panier
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">Aucun produit disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Articles Section -->
+<section class="blog_section layout_padding">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-down">Nos Articles</h2>
+        <div class="row">
+            {% for article in articles %}
+            <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                <div class="box">
+                    <a href="{% url 'blog:article_detail' article.slug %}">
+                        {% if article.image %}
+                            <img src="{{ article.image.url }}" alt="{{ article.title }}" class="img-fluid rounded mb-3">
+                        {% else %}
+                            <img src="{% static 'images/default-article.jpg' %}" alt="Article par défaut" class="img-fluid rounded mb-3">
+                        {% endif %}
+                        <h5>{{ article.title }}</h5>
+                        <p>{{ article.content|truncatewords:20|safe }}</p>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-center">Aucun article disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Subscribe Section -->
+<section class="subscribe_section layout_padding">
+    <div class="container-fluid">
+        <div class="box">
+            <div class="row">
+                <div class="col-md-6 offset-md-3">
+                    <div class="subscribe_form text-center" data-aos="fade-up">
+                        <h3 class="section-title">Abonnez-vous pour des offres exclusives</h3>
+                        <p>Recevez nos dernières promotions directement dans votre boîte mail.</p>
+                        <form action="{% url 'subscribe' %}" method="post" class="d-flex">
+                            {% csrf_token %}
+                            <input type="email" name="email" placeholder="Entrez votre email" required class="form-control">
+                            <button type="submit" class="btn btn-primary">
+                                S'abonner <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonial_section layout_padding">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-down">Ce qu’ils disent de nous</h2>
+        {% if testimonials %}
+            <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for testimonial in testimonials %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %} portfolio-item" data-aos="fade-up">
+                            <div class="text-center">
+                                {% if testimonial.image %}
+                                    <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}" class="rounded-circle">
+                                {% else %}
+                                    <img src="{% static 'images/default-user.jpg' %}" alt="Utilisateur par défaut" class="rounded-circle">
+                                {% endif %}
+                                <h5>{{ testimonial.name }} - {{ testimonial.role }}</h5>
+                                <p>{{ testimonial.content }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <ol class="carousel-indicators">
+                    {% for testimonial in testimonials %}
+                        <li data-bs-target="#testimonialCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></li>
+                    {% endfor %}
+                </ol>
+                <a class="carousel-control-prev" href="#testimonialCarousel" role="button" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Précédent</span>
+                </a>
+                <a class="carousel-control-next" href="#testimonialCarousel" role="button" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Suivant</span>
+                </a>
+            </div>
+        {% else %}
+            <p class="text-center">Aucun témoignage disponible pour le moment.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

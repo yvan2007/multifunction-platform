@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .header img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .order-details {
+            margin: 20px 0;
+        }
+        .product-details {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+        .product-details img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 20px;
+            border-radius: 5px;
+        }
+        .product-details p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+        }
+        .footer p {
+            margin: 0;
+            color: #777;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            .product-details {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .product-details img {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://via.placeholder.com/150x50.png?text=Logo" alt="Logo"> <!-- Remplacer par l'URL de votre logo -->
+            <h1>Confirmation de Commande</h1>
+        </div>
+        <div class="content">
+            <h2>Bonjour {{ user.username }},</h2>
+            <p>Merci pour votre commande ! Voici les détails de votre achat :</p>
+            <p><strong>Commande #{{ order.id }}</strong> - Passée le {{ order.created_at|date:"d M Y H:i" }}</p>
+            <div class="order-details">
+                {% for item in order.items.all %}
+                <div class="product-details">
+                    {% if item.product.primary_image %}
+                    <img src="{{ request.scheme }}://{{ request.get_host }}{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/80" alt="Image par défaut">
+                    {% endif %}
+                    <div>
+                        <p><strong>Produit :</strong> {{ item.product.name }}</p>
+                        <p><strong>Description :</strong> {{ item.product.description|truncatewords:20 }}</p>
+                        <p><strong>Prix :</strong> {{ item.price|floatformat:2 }} FCFA</p>
+                        <p><strong>Quantité :</strong> {{ item.quantity }}</p>
+                        <p><strong>Total :</strong> {{ item.total_price|floatformat:2 }} FCFA</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <p><strong>Total de la commande :</strong> {{ order.total_price|floatformat:2 }} FCFA</p>
+            <p><strong>Adresse de livraison :</strong> {{ order.address.street }}, {{ order.address.city }}, {{ order.address.country }}</p>
+        </div>
+        <div class="footer">
+            <p>Merci de faire vos achats chez nous ! Si vous avez des questions, contactez-nous à <a href="mailto:support@example.com">support@example.com</a>.</p>
+            <p>© 2025 MultiFunction Platform. Tous droits réservés.</p>
+        </div>
+    </div>
+</body>
+</html>

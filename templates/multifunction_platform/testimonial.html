@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Témoignages - Portfolio Multifonction{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Client Section (Testimonials) */
+    .client_section {
+        padding: 100px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .client_section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/testimonial-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+
+    /* Carousel Styling */
+    .carousel-inner {
+        padding: 20px 0;
+    }
+    .box {
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+    .box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(247, 201, 72, 0.1));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .box:hover::before {
+        opacity: 1;
+    }
+
+    /* Image Container */
+    .img_container {
+        margin-bottom: 30px;
+    }
+    .img-box {
+        display: inline-block;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid #4a90e2;
+        transition: border-color 0.3s ease, transform 0.5s ease;
+    }
+    .box:hover .img-box {
+        border-color: #f7c948;
+        transform: rotate(5deg);
+    }
+    .img_box-inner {
+        width: 100%;
+        height: 100%;
+    }
+    .img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Detail Box */
+    .detail-box {
+        position: relative;
+    }
+    .detail-box h5 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    .detail-box h6 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #4a90e2;
+        margin-bottom: 20px;
+    }
+    .detail-box p {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        line-height: 1.6;
+        max-width: 700px;
+        margin: 0 auto 20px;
+    }
+    .detail-box::before {
+        content: '\f10d'; /* Font Awesome quote-left icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2rem;
+        color: #4a90e2;
+        opacity: 0.2;
+    }
+
+    /* Carousel Controls */
+    .carousel_btn_box {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+    }
+    .carousel-control-prev,
+    .carousel-control-next {
+        position: static;
+        width: auto;
+        margin: 0 15px;
+    }
+    .carousel-control-prev i,
+    .carousel-control-next i {
+        font-size: 2rem;
+        color: #4a90e2;
+        background: #f5f7fa;
+        padding: 15px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    .carousel-control-prev:hover i,
+    .carousel-control-next:hover i {
+        color: #f7c948;
+        background: #e6f0fa;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+    }
+
+    /* No Testimonials Message */
+    .detail-box p.text-center {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 767px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .box {
+            padding: 30px;
+        }
+        .detail-box h5 {
+            font-size: 1.4rem;
+        }
+        .detail-box h6 {
+            font-size: 1.1rem;
+        }
+        .detail-box p {
+            font-size: 1.1rem;
+        }
+        .img-box {
+            width: 100px;
+            height: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="client_section layout_padding">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Témoignages</h2>
+        <div id="carouselExample3Controls" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for testimonial in testimonials %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %} portfolio-item" data-aos="fade-up">
+                    <div class="box col-lg-10 mx-auto">
+                        <div class="img_container">
+                            <div class="img-box">
+                                <div class="img_box-inner">
+                                    {% if testimonial.image %}
+                                        <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}">
+                                    {% else %}
+                                        <img src="{% static 'images/client.jpg' %}" alt="{{ testimonial.name }}">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-box">
+                            <h5>{{ testimonial.name }}</h5>
+                            <h6>{{ testimonial.role }}</h6>
+                            <p>{{ testimonial.content }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="carousel-item active">
+                    <div class="box col-lg-10 mx-auto">
+                        <div class="detail-box">
+                            <p class="text-center">Aucun témoignage pour le moment.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="carousel_btn_box">
+                <a class="carousel-control-prev" href="#carouselExample3Controls" role="button" data-bs-slide="prev">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    <span class="sr-only">Précédent</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExample3Controls" role="button" data-bs-slide="next">
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    <span class="sr-only">Suivant</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

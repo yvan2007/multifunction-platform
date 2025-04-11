@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,14 +8,187 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome pour les icônes -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- AOS pour les animations -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Google Fonts pour une typographie élégante -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Fichiers statiques -->
-    {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <!-- Règle CSS pour désactiver la mise en majuscule -->
+    <!-- Styles personnalisés -->
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+            color: #2d3748;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .navbar.scrolled {
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4a90e2 !important;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+        .navbar-brand i {
+            margin-right: 10px;
+            color: #f7c948;
+        }
+        .navbar-brand:hover {
+            color: #f7c948 !important;
+        }
+        .nav-link {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2d3748 !important;
+            padding: 10px 15px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        .nav-link i {
+            margin-right: 8px;
+            color: #4a90e2;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            background-color: #e6f0fa;
+            color: #4a90e2 !important;
+        }
+        .nav-link:hover i {
+            color: #f7c948;
+        }
+        .dropdown-menu {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 10px 0;
+        }
+        .dropdown-item {
+            color: #2d3748;
+            padding: 10px 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .dropdown-item i {
+            margin-right: 10px;
+            color: #4a90e2;
+        }
+        .dropdown-item:hover {
+            background-color: #e6f0fa;
+            color: #4a90e2;
+        }
+        .badge {
+            background-color: #f7c948 !important;
+            color: #2d3748;
+            font-size: 0.8rem;
+            padding: 5px 8px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        /* Messages d'alerte */
+        .alert {
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: #e6f0fa;
+            color: #2d3748;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.5s ease;
+            display: flex;
+            align-items: center;
+        }
+        .alert i {
+            margin-right: 10px;
+            color: #4a90e2;
+            font-size: 1.2rem;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #4a90e2, #81c3f7);
+            padding: 60px 0 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('{% static "images/footer-bg-pattern.png" %}') repeat;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        footer h5 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        footer h5::after {
+            content: '';
+            width: 40px;
+            height: 3px;
+            background-color: #f7c948;
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+        }
+        footer p, footer a {
+            color: #f5f7fa;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        footer a:hover {
+            color: #f7c948;
+            text-decoration: none;
+        }
+        .social-links a {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .social-links a:hover {
+            transform: translateY(-5px);
+            color: #f7c948;
+        }
+        footer .text-center p {
+            font-size: 0.9rem;
+            color: #d1e3f6;
+        }
+
+        /* Désactiver la mise en majuscule */
         input[type="text"],
         input[type="email"],
         input[type="password"],
@@ -34,65 +208,68 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">Multifunction</a>
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fa-solid fa-cube"></i> Multifunction
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}">Accueil</a>
+                        <a class="nav-link" href="{% url 'index' %}"><i class="fa-solid fa-house"></i> Accueil</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}">À Propos</a>
+                        <a class="nav-link" href="{% url 'about' %}"><i class="fa-solid fa-circle-info"></i> À Propos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'ecommerce:product_list' %}">Produits</a>
+                        <a class="nav-link" href="{% url 'ecommerce:product_list' %}"><i class="fa-solid fa-bag-shopping"></i> Produits</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'blog:blog' %}">Blog</a>
+                        <a class="nav-link" href="{% url 'blog:blog' %}"><i class="fa-solid fa-blog"></i> Blog</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'testimonial' %}">Témoignages</a>
+                        <a class="nav-link" href="{% url 'testimonial' %}"><i class="fa-solid fa-star"></i> Témoignages</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+                        <a class="nav-link" href="{% url 'contact' %}"><i class="fa-solid fa-envelope"></i> Contact</a>
                     </li>
-                    <!-- Bouton Tableau de bord pour les gestionnaires uniquement -->
                     {% if user.is_authenticated and user.is_manager %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'users:manager_dashboard' %}">Tableau de bord</a>
+                            <a class="nav-link" href="{% url 'users:manager_dashboard' %}"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</a>
                         </li>
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'orders:cart' %}">
-                            Panier <span class="badge bg-primary">{{ cart_item_count }}</span>
+                            <i class="fa-solid fa-cart-shopping"></i> Panier 
+                            {% if cart_count > 0 %}
+                                <span class="badge">{{ cart_count }}</span>
+                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
                         {% if user.is_authenticated %}
-                            <!-- Menu déroulant pour le profil -->
                             <div class="dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-circle fa-lg"></i> {{ user.username }}
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-user-circle fa-lg me-2"></i> {{ user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                    <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profil</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="fa-solid fa-user"></i> Profil</a></li>
                                     {% if not user.is_manager %}
-                                        <li><a class="dropdown-item" href="{% url 'users:orders' %}">Mes commandes</a></li>
-                                        <li><a class="dropdown-item" href="{% url 'users:favorites' %}">Favoris</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'users:orders' %}"><i class="fa-solid fa-bag-shopping"></i> Mes commandes</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'users:favorites' %}"><i class="fa-solid fa-heart"></i> Favoris</a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'users:logout' %}">Déconnexion</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</a></li>
                                 </ul>
                             </div>
                         {% else %}
-                            <a class="nav-link" href="{% url 'users:login' %}">Connexion</a>
-                            <a class="nav-link" href="{% url 'users:register' %}">Inscription</a>
+                            <a class="nav-link" href="{% url 'users:login' %}"><i class="fa-solid fa-right-to-bracket"></i> Connexion</a>
+                            <a class="nav-link" href="{% url 'users:register' %}"><i class="fa-solid fa-user-plus"></i> Inscription</a>
                         {% endif %}
                     </li>
                 </ul>
@@ -101,11 +278,11 @@
     </nav>
 
     <!-- Contenu principal -->
-    <div class="container mt-4">
+    <div class="container mt-5 pt-5">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    <i class="fa-solid fa-circle-info"></i> {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
@@ -115,28 +292,34 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container">
+    <footer class="text-white">
+        <div class="container position-relative">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-4" data-aos="fade-up">
                     <h5>Multifunction</h5>
                     <p>Une plateforme pour tous vos besoins : e-commerce, blog, et plus encore.</p>
+                    <div class="social-links mt-3">
+                        <a href="#" data-aos="fade-up" data-aos-delay="100"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" data-aos="fade-up" data-aos-delay="150"><i class="fab fa-twitter"></i></a>
+                        <a href="#" data-aos="fade-up" data-aos-delay="200"><i class="fab fa-instagram"></i></a>
+                        <a href="#" data-aos="fade-up" data-aos-delay="250"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
                     <h5>Liens utiles</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{% url 'about' %}" class="text-white">À Propos</a></li>
-                        <li><a href="{% url 'contact' %}" class="text-white">Contact</a></li>
-                        <li><a href="{% url 'privacy' %}" class="text-white">Politique de confidentialité</a></li>
+                        <li><a href="{% url 'about' %}">À Propos</a></li>
+                        <li><a href="{% url 'contact' %}">Contact</a></li>
+                        <li><a href="{% url 'privacy' %}">Politique de confidentialité</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
                     <h5>Contactez-nous</h5>
-                    <p>Email : support@multifunction.com</p>
-                    <p>Téléphone : +33 1 23 45 67 89</p>
+                    <p><i class="fa-solid fa-envelope me-2"></i> Email : support@multifunction.com</p>
+                    <p><i class="fa-solid fa-phone me-2"></i> Téléphone : +33 1 23 45 67 89</p>
                 </div>
             </div>
-            <div class="text-center mt-3">
+            <div class="text-center mt-4" data-aos="fade-up" data-aos-delay="300">
                 <p>© 2025 Multifunction. Tous droits réservés.</p>
             </div>
         </div>
@@ -146,9 +329,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init();
-    </script>
-    <script>
+        AOS.init({
+            duration: 800,
+            once: true,
+        });
+
+        // Effet de défilement pour la navbar
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="search"], textarea');
             inputs.forEach(input => {
@@ -157,6 +352,16 @@
                 input.addEventListener('input', function(e) {
                     const originalValue = e.target.value;
                     e.target.value = originalValue;
+                });
+            });
+
+            // Défilement fluide pour les liens
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
                 });
             });
         });

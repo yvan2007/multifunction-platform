@@ -1,50 +1,83 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Panier{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'ecommerce/css/cart.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'ecommerce/js/cart.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 cart-container">
     <h2>Votre Panier</h2>
-    {% if cart_items %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Prix unitaire</th>
-                    <th>Quantité</th>
-                    <th>Total</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in cart_items %}
-                    <tr>
-                        <td>{{ item.product.name }}</td>
-                        <td>
-                            {{ item.product.price|floatformat:2 }} FCFA
-                        </td>
-                        <td>{{ item.quantity }}</td>
-                        <td>
-                            {{ item.get_total_price|floatformat:2 }} FCFA
-                        </td>
-                        <td>
-                            <form method="post" action="{% url 'orders:remove_from_cart' item.product.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="text-end">
-            <h4>Total: {{ cart_items|length }} article(s) - {{ total_price|floatformat:2 }} FCFA</h4>
-            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Passer à la caisse</a>
+    {% if cart %}
+        <div class="cart-items">
+            {% for item in cart %}
+                <div class="cart-item">
+                    <img src="{% if item.product.primary_image %}{{ item.product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" alt="{{ item.product.name }}">
+                    <div class="cart-item-details">
+                        <h5>{{ item.product.name }}</h5>
+                        <p>{{ item.product.price|floatformat:2 }} FCFA x {{ item.quantity }}</p>
+                        <p>Total: {{ item.total_price|floatformat:2 }} FCFA</p>
+                    </div>
+                    <a href="{% url 'ecommerce:remove_from_cart' item.product.id %}" class="btn btn-danger btn-sm">Retirer</a>
+                </div>
+            {% endfor %}
         </div>
+        <div class="cart-total mt-4">
+            <h4>Total: {{ cart.get_total_price|floatformat:2 }} FCFA</h4>
+        </div>
+
+        <div class="payment-options">
+            <h4>Options de Paiement</h4>
+            <div class="payment-option">
+                <input type="radio" id="credit-card" name="payment_method" value="credit_card" checked>
+                <img src="{% static 'images/visa.png' %}" alt="Visa">
+                <img src="{% static 'images/mastercard.png' %}" alt="MasterCard">
+                <label for="credit-card">Carte Bancaire</label>
+            </div>
+            <div class="payment-info">
+                <p>Payez en toute sécurité avec votre carte Visa ou MasterCard. Entrez vos informations de paiement lors de la validation.</p>
+            </div>
+
+            <div class="payment-option">
+                <input type="radio" id="wave" name="payment_method" value="wave">
+                <img src="{% static 'images/wave.png' %}" alt="Wave">
+                <label for="wave">Wave</label>
+            </div>
+            <div class="payment-info">
+                <p>Utilisez Wave pour un paiement rapide et sécurisé. Suivez les instructions après validation.</p>
+            </div>
+
+            <div class="payment-option">
+                <input type="radio" id="orange-money" name="payment_method" value="orange_money">
+                <img src="{% static 'images/orange-money.png' %}" alt="Orange Money">
+                <label for="orange-money">Orange Money</label>
+            </div>
+            <div class="payment-info">
+                <p>Payez avec Orange Money en toute simplicité. Suivez les instructions après validation.</p>
+            </div>
+        </div>
+
+        <form id="checkout-form" method="post" action="{% url 'ecommerce:checkout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary mt-3">Passer la commande</button>
+        </form>
     {% else %}
-        <p class="text-muted">Votre panier est vide.</p>
-        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
+        <p>Votre panier est vide.</p>
     {% endif %}
+</div>
+
+<!-- Loading Animation -->
+<div class="loading-overlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- Success Animation -->
+<div class="success-animation">
+    <i class="fas fa-check-circle"></i>
+    <p>Commande validée avec succès !</p>
 </div>
 {% endblock %}

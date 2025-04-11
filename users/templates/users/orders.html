@@ -1,46 +1,131 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Mes Commandes{% endblock %}
+
+{% block extra_css %}
+<style>
+    .orders-section {
+        padding: 50px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .table {
+        background-color: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 15px;
+        font-size: 1.1rem;
+        color: #2d3748;
+    }
+    .table th {
+        background: #4a90e2;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .btn-danger {
+        background: #e63946;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+        background: #d00000;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn i {
+        margin-right: 8px;
+    }
+    .empty-orders {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        margin-top: 40px;
+    }
+    @media (max-width: 768px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .btn-danger {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Mes Commandes</h2>
-    <!-- Afficher les messages d'erreur ou de succès -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-    <!-- Vérifier s'il y a des commandes -->
-    {% if orders %}
-        <table class="table table-striped">
+<section class="orders-section">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Mes Commandes</h2>
+        {% if orders %}
+        <table class="table table-striped" data-aos="fade-up">
             <thead>
                 <tr>
-                    <th>Numéro de commande</th>
+                    <th>ID Commande</th>
+                    <th>Total</th>
                     <th>Date</th>
-                    <th>Montant total</th>
                     <th>Statut</th>
-                    <th>Détails</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
-                    <tr>
-                        <td>{{ order.id }}</td>
-                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
-                        <td>{{ order.total_amount }} €</td>
-                        <td>{{ order.status }}</td>
-                        <td>
-                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary">Voir détails</a>
-                        </td>
-                    </tr>
+                <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.total_price|floatformat:2 }} FCFA</td>
+                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>
+                        {% if order.status in 'pending,processing' %}
+                        <form method="POST" action="{% url 'users:cancel_order' order.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Voulez-vous vraiment annuler cette commande ?');">
+                                <i class="fas fa-times"></i> Annuler
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">Action non disponible</span>
+                        {% endif %}
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>Vous n'avez aucune commande pour le moment.</p>
-        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
-    {% endif %}
-</div>
+        {% else %}
+        <p class="empty-orders" data-aos="fade-up">Vous n'avez aucune commande pour le moment.</p>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

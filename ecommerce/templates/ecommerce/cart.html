@@ -1,29 +1,335 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Panier - {{ block.super }}{% endblock %}
+{% block title %}Votre Panier{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .cart-section {
+        padding: 50px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .cart-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/blog-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .table {
+        background-color: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 15px;
+        font-size: 1.1rem;
+        color: #2d3748;
+    }
+    .table th {
+        background: #4a90e2;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .table img {
+        border-radius: 5px;
+    }
+    .cart-summary {
+        text-align: right;
+        margin-top: 30px;
+    }
+    .cart-summary .summary-box {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    .cart-summary .summary-box p {
+        margin: 10px 0;
+        font-size: 1.2rem;
+        color: #2d3748;
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success {
+        background: #28a745;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-danger {
+        background: #e63946;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+        background: #d00000;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn i {
+        margin-right: 8px;
+    }
+    .empty-cart {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        margin-top: 40px;
+    }
+    @media (max-width: 768px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .cart-summary {
+            text-align: center;
+        }
+        .btn-primary,
+        .btn-success,
+        .btn-danger {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <section class="cart_section layout_padding">
-        <div class="container">
-            <h2 class="section-title">Votre Panier</h2>
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            {% if cart %}
-                <ul>
-                    {% for product_id, item in cart.items %}
-                        <li>{{ item.name }} - {{ item.price }} € (Quantité: {{ item.quantity }})</li>
-                    {% endfor %}
-                </ul>
-                <a href="{% url 'ecommerce:checkout' %}" class="btn btn-primary">Passer à la caisse</a>
-            {% else %}
-                <p>Votre panier est vide.</p>
-                <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
-            {% endif %}
+<section class="cart-section">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Votre Panier</h2>
+        {% if cart_items %}
+        <table class="table table-striped" data-aos="fade-up">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Quantité</th>
+                    <th>Prix Unitaire</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="cart-items">
+                {% for item in cart_items %}
+                <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}" data-product-id="{{ item.product.id }}">
+                    <td>
+                        {% if item.product.primary_image %}
+                        <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                        {% else %}
+                        <img src="{% static 'images/default-product.jpg' %}" alt="Image par défaut" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                        {% endif %}
+                        {{ item.product.name }}
+                    </td>
+                    <td>
+                        <form class="update-cart-form d-inline" data-product-id="{{ item.product.id }}">
+                            {% csrf_token %}
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="0" style="width: 60px; padding: 5px; border-radius: 5px; border: 2px solid #e6f0fa;">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
+                        </form>
+                    </td>
+                    <td class="unit-price">{{ item.product.price|floatformat:2 }} FCFA</td>
+                    <td class="item-total">{{ item.total_price|floatformat:2 }} FCFA</td>
+                    <td>
+                        <a href="{% url 'orders:remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger remove-from-cart" data-product-id="{{ item.product.id }}">
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="cart-summary" data-aos="fade-up">
+            <div class="summary-box">
+                <p><strong>Sous-total :</strong> <span id="subtotal">{{ total_price|floatformat:2 }}</span> FCFA</p>
+                <p><strong>Frais de livraison :</strong> <span id="delivery-cost">0,00</span> FCFA</p>
+                <p><strong>Total :</strong> <span id="total-price">{{ total_price|floatformat:2 }}</span> FCFA</p>
+            </div>
+            <a href="{% url 'orders:checkout' %}" class="btn btn-success"><i class="fas fa-check"></i> Passer à la Caisse</a>
         </div>
-    </section>
+        {% else %}
+        <p class="empty-cart" data-aos="fade-up">Votre panier est vide.</p>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+            <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Continuer vos achats</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const BASE_DELIVERY_COST = 2000; // Frais de livraison de base
+
+    // Fonction pour calculer et mettre à jour le résumé du panier
+    function updateCartSummary() {
+        let subtotal = 0;
+        const items = document.querySelectorAll('#cart-items tr');
+        items.forEach(item => {
+            const itemTotal = parseFloat(item.querySelector('.item-total').textContent.replace(',', '.'));
+            subtotal += itemTotal;
+        });
+
+        const deliveryCost = items.length > 0 ? BASE_DELIVERY_COST : 0;
+        const totalPrice = subtotal + deliveryCost;
+
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2).replace('.', ',');
+        document.getElementById('delivery-cost').textContent = deliveryCost.toFixed(2).replace('.', ',');
+        document.getElementById('total-price').textContent = totalPrice.toFixed(2).replace('.', ',');
+
+        // Mettre à jour le badge du panier dans le header
+        const cartBadge = document.querySelector('.badge-warning');
+        if (cartBadge) {
+            cartBadge.textContent = items.length;
+            if (items.length === 0) {
+                cartBadge.style.display = 'none';
+            } else {
+                cartBadge.style.display = 'inline-block';
+            }
+        }
+    }
+
+    // Gestion des formulaires de mise à jour de quantité
+    document.querySelectorAll('.update-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+            const quantityInput = this.querySelector('input[name="quantity"]');
+            const quantity = parseInt(quantityInput.value);
+
+            fetch(`/orders/update_cart/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `quantity=${quantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (quantity <= 0) {
+                        // Supprimer la ligne si la quantité est 0
+                        const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                        if (row) {
+                            row.remove();
+                        }
+                    } else {
+                        // Mettre à jour le total de l'article
+                        const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                        const unitPrice = parseFloat(row.querySelector('.unit-price').textContent.replace(',', '.'));
+                        const newTotal = unitPrice * quantity;
+                        row.querySelector('.item-total').textContent = newTotal.toFixed(2).replace('.', ',');
+                    }
+                    updateCartSummary();
+                } else {
+                    alert(data.message || 'Erreur lors de la mise à jour du panier.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la mise à jour du panier.');
+            });
+        });
+    });
+
+    // Gestion des suppressions d'articles
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+
+            fetch(`/orders/remove_from_cart/${productId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                    updateCartSummary();
+                    // Si le panier est vide, recharger la page pour afficher le message "Votre panier est vide"
+                    if (document.querySelectorAll('#cart-items tr').length === 0) {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || 'Erreur lors de la suppression de l\'article.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la suppression de l\'article.');
+            });
+        });
+    });
+
+    // Initialiser le résumé du panier au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartSummary();
+    });
+</script>
 {% endblock %}

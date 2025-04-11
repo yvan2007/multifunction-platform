@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
+from orders.models import Order  # Import Order for Payment model
 
 # Modèle pour les catégories de produits
 class Category(models.Model):
@@ -10,11 +11,17 @@ class Category(models.Model):
         ('blog', 'Blog'),
     )
     name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)  # Added slug field
     description = models.TextField(blank=True, null=True)
     category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES, default='product')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -22,7 +29,14 @@ class Category(models.Model):
 # Modèle pour les tags
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True, blank=True)  # Added slug field
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -58,7 +72,8 @@ class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_images/')
     alt_text = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)  # Changed to auto_now_add
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return f"Image for {self.product.name}"
@@ -70,18 +85,25 @@ class Review(models.Model):
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return f"Review by {self.user.username} on {self.product.name}"
 
 # Modèle pour le panier
 class Cart(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True  # Allow anonymous carts
+    )
+    session_id = models.CharField(max_length=100, null=True, blank=True)  # Added for anonymous carts
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Cart of {self.user.username}"
+        return f"Cart of {self.user.username if self.user else 'Anonymous'}"
 
     @property
     def total_amount(self):
@@ -89,74 +111,38 @@ class Cart(models.Model):
 
 # Modèle pour les éléments du panier
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='ecommerce_cart_items')  # Ajout de related_name
-    quantity = models.PositiveIntegerField(default=1)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"{self.quantity} x {self.product.name} in cart"
-
-# Modèle pour les commandes
-class Order(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'En attente'),
-        ('processing', 'En cours de traitement'),
-        ('shipped', 'Expédiée'),
-        ('delivered', 'Livrée'),
-        ('cancelled', 'Annulée'),
+    cart = models.ForeignKey(
+        Cart,
+        related_name='items',
+        on_delete=models.CASCADE
     )
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+    product = models.ForeignKey(
+        'ecommerce.Product',
         on_delete=models.CASCADE,
-        related_name='ecommerce_orders'
+        related_name='order_cart_items'  # <-- corrigé ici
     )
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    address = models.ForeignKey(
-        'users.Address',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='ecommerce_orders'
-    )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Order {self.id} by {self.user.username}"
-
-    @property
-    def total_amount(self):
-        return sum(item.price * item.quantity for item in self.items.all())
-
-    class Meta:
-        ordering = ['-created_at']
-
-# Modèle pour les éléments de commande
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='ecommerce_order_items')
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"{self.quantity} x {self.product.name} in order {self.order.id}"
+        return f"{self.quantity} x {self.product.name} in cart"
 
     @property
     def total_price(self):
-        return self.price * self.quantity
+        """Calculate the total price for this cart item (price * quantity)."""
+        return self.product.price * self.quantity
+
 
 # Modèle pour les paiements
 class Payment(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')  # Updated to use orders.Order
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=50, default='carte')
     status = models.CharField(max_length=20, default='completed')
-    transaction_id = models.CharField(max_length=100)
+    transaction_id = models.CharField(max_length=100, unique=True)  # Made unique
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return f"Payment for order {self.order.id}"
@@ -168,6 +154,7 @@ class Testimonial(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='testimonials/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return self.name
@@ -176,6 +163,7 @@ class Testimonial(models.Model):
 class NewsletterSubscription(models.Model):
     email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return self.email
@@ -186,6 +174,7 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # Added updated_at
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:50]}"

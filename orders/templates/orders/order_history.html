@@ -2,57 +2,148 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Historique des commandes</h1>
+<section class="order-history-section" style="padding: 50px 0; background: linear-gradient(135deg, #f5f7fa, #e6f0fa); position: relative; overflow: hidden;">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Historique des commandes</h2>
 
-    {% if messages %}
-        <div class="alert alert-info">
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    {% if orders %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Numéro de commande</th>
-                    <th>Date</th>
-                    <th>Total (FCFA)</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                    <tr>
-                        <td>{{ order.id }}</td>
-                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
-                        <td>{{ order.total_price|floatformat:2 }}</td>
-                        <td>
-                            {% if order.status == 'pending' %}
-                                En attente
-                            {% elif order.status == 'processing' %}
-                                En cours de traitement
-                            {% elif order.status == 'shipped' %}
-                                Expédiée
-                            {% elif order.status == 'delivered' %}
-                                Livrée
-                            {% elif order.status == 'cancelled' %}
-                                Annulée
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary">Voir les détails</a>
-                        </td>
-                    </tr>
+        {% if messages %}
+            <div class="alert alert-info" data-aos="fade-up">
+                {% for message in messages %}
+                    {{ message }}
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Vous n'avez aucune commande pour le moment.</p>
-        <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Continuer vos achats</a>
-    {% endif %}
-</div>
+            </div>
+        {% endif %}
+
+        {% if orders %}
+            <table class="table table-striped" data-aos="fade-up">
+                <thead>
+                    <tr>
+                        <th>Numéro de commande</th>
+                        <th>Date</th>
+                        <th>Total (FCFA)</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ order.total_price|floatformat:2 }}</td>
+                            <td>
+                                {% if order.status == 'pending' %}
+                                    En attente
+                                {% elif order.status == 'processing' %}
+                                    En cours de traitement
+                                {% elif order.status == 'shipped' %}
+                                    Expédiée
+                                {% elif order.status == 'delivered' %}
+                                    Livrée
+                                {% elif order.status == 'cancelled' %}
+                                    Annulée
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i> Voir les détails</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-orders" data-aos="fade-up">Vous n'avez aucune commande pour le moment.</p>
+            <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+                <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Continuer vos achats</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    .order-history-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/blog-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .table {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 15px;
+        font-size: 1.1rem;
+        color: #2d3748;
+    }
+    .table th {
+        background: #4a90e2;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-primary i {
+        margin-right: 8px;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .no-orders {
+        font-size: 1.2rem;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        margin-top: 40px;
+    }
+    @media (max-width: 767px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .table th, .table td {
+            font-size: 1rem;
+        }
+        .btn-primary {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
 {% endblock %}

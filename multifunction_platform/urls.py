@@ -10,18 +10,13 @@ from ecommerce.api import ProductViewSet, CategoryViewSet
 from blog.api import ArticleViewSet
 from .views import (
     index, search_products, about, privacy, contact, testimonial,
-    add_testimonial, delete_testimonial, subscribe, manage_categories,
-    add_product_category, add_blog_category, delete_product_category,
-    delete_blog_category, manager_dashboard
+    add_testimonial, delete_testimonial, subscribe
 )
-
-# Define app_name for the root URLs (optional but recommended)
-app_name = 'core'
 
 # Set up the DefaultRouter for API views
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
-router.register(r'categories', CategoryViewSet, basename='category')  # Added CategoryViewSet
+router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'articles', ArticleViewSet, basename='article')
 
 # Swagger/Redoc schema view
@@ -58,21 +53,10 @@ urlpatterns = [
     path('delete-testimonial/<int:testimonial_id>/', delete_testimonial, name='delete_testimonial'),
     path('subscribe/', subscribe, name='subscribe'),
     
-    # Category management views
-    path('manage-categories/', manage_categories, name='manage_categories'),
-    path('add-product-category/', add_product_category, name='add_product_category'),
-    path('add-blog-category/', add_blog_category, name='add_blog_category'),
-    path('delete-product-category/<int:category_id>/', delete_product_category, name='delete_product_category'),
-    path('delete-blog-category/<int:category_id>/', delete_blog_category, name='delete_blog_category'),
-    
-    # Manager dashboard
-    path('manager-dashboard/', manager_dashboard, name='manager_dashboard'),
-    
     # API and documentation endpoints
     path('api-auth/', include('rest_framework.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/', include('ecommerce.api_urls')),
     
     # CKEditor 5 file upload
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),

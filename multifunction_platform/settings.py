@@ -1,7 +1,6 @@
-# settings.py
 import os
 from pathlib import Path
-from django.contrib.messages import constants as message_constants  # Changé de 'messages' à 'message_constants'
+from django.contrib.messages import constants as message_constants
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,14 +15,6 @@ DEBUG = True
 print("EMAIL_HOST_USER:", EMAIL_HOST_USER)
 print("EMAIL_HOST_PASSWORD:", EMAIL_HOST_PASSWORD)
 
-MESSAGE_TAGS = {
-    message_constants.DEBUG: 'alert-info',
-    message_constants.INFO: 'alert-info',
-    message_constants.SUCCESS: 'alert-success',
-    message_constants.WARNING: 'alert-warning',
-    message_constants.ERROR: 'alert-danger',
-}
-
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
@@ -33,7 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'django.contrib.sites',
     'multifunction_platform',
     'users',
     'ecommerce',
@@ -70,7 +60,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'multifunction_platform.context_processors.cart_item_count',
+                'orders.context_processors.cart_count',  # Keep only this one
             ],
         },
     },
@@ -168,11 +158,8 @@ CKEDITOR_5_CONFIGS = {
                 "imageStyle:alignRight"
             ],
         },
-        "upload_url": "/ckeditor5/upload/",
     }
 }
-
-CKEDITOR_UPLOAD_PATH = "uploads/"
 
 # Messages Bootstrap
 MESSAGE_TAGS = {
@@ -195,7 +182,7 @@ DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_SAVE_EVERY_REQUEST = True
 
-# Configuration de la journalisation pour django-axes
+# Configuration de la journalisation
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -224,8 +211,14 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        '': {  # Logger racine pour capturer tous les logs, y compris ceux de users.apps
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # Permettre l'accès à tous pour l'API (à ajuster selon vos besoins)
