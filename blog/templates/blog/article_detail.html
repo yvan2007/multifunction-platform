@@ -84,7 +84,7 @@
             <div class="comment-content">
                 <p>{{ comment.content }}</p>
                 <div class="comment-actions">
-                    <a href="{% url 'blog:reply_comment' article.slug comment.id %}" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> Répondre</a>
+                    <a href="{% url 'blog:reply_comment' article.id comment.id %}" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> Répondre</a>  <!-- Updated to use article.id -->
                 </div>
             </div>
             <!-- Afficher les réponses imbriquées -->
@@ -99,7 +99,7 @@
                 <div class="comment-content">
                     <p>{{ reply.content }}</p>
                     <div class="comment-actions">
-                        <a href="{% url 'blog:reply_comment' article.slug reply.id %}" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> Répondre</a>
+                        <a href="{% url 'blog:reply_comment' article.id reply.id %}" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> Répondre</a>  <!-- Updated to use article.id -->
                     </div>
                 </div>
             </div>
@@ -112,7 +112,7 @@
 
     <div class="comment-form">
         <h4>Ajouter un commentaire</h4>
-        <form method="post" action="{% url 'blog:add_comment' article.slug %}">
+        <form method="post" action="{% url 'blog:add_comment' article.id %}">  <!-- Updated to use article.id -->
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary"><i class="fas fa-comment"></i> Publier</button>

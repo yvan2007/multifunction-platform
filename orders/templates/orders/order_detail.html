@@ -1,16 +1,46 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
 {% block content %}
 <section class="order-detail-section" style="padding: 50px 0; background: linear-gradient(135deg, #f5f7fa, #e6f0fa); position: relative; overflow: hidden;">
     <div class="container position-relative">
         <h2 class="section-title" data-aos="fade-down">Détails de la commande #{{ order.id }}</h2>
+
+        <!-- Section de suivi dynamique -->
+        <div class="tracking-section card mb-4" data-aos="fade-up">
+            <div class="card-body">
+                <h5 class="card-title">Suivi de l'expédition</h5>
+                <div class="tracking-progress">
+                    <div class="progress-step {% if order.status == 'pending' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}">
+                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                        <p>Commande en attente</p>
+                    </div>
+                    <div class="progress-step {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}">
+                        <div class="step-icon"><i class="fas fa-box-open"></i></div>
+                        <p>En cours de traitement</p>
+                    </div>
+                    <div class="progress-step {% if order.status == 'shipped' or order.status == 'delivered' %}active{% endif %}">
+                        <div class="step-icon"><i class="fas fa-truck"></i></div>
+                        <p>Expédiée</p>
+                    </div>
+                    <div class="progress-step {% if order.status == 'delivered' %}active{% endif %}">
+                        <div class="step-icon"><i class="fas fa-home"></i></div>
+                        <p>Livrée</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card mb-4" data-aos="fade-up">
             <div class="card-body">
                 <h5 class="card-title">Informations de la commande</h5>
                 <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
                 <p><strong>Total :</strong> {{ order.total_price|floatformat:2 }} FCFA</p>
+                <p><strong>Frais de livraison :</strong> {{ order.delivery_cost|floatformat:2 }} FCFA</p>
                 <p><strong>Statut :</strong>
                     {% if order.status == 'pending' %}
                         En attente
@@ -24,6 +54,23 @@
                         Annulée
                     {% endif %}
                 </p>
+                <p><strong>Méthode de paiement :</strong>
+                    {% if order.payment_method == 'orange' %}
+                        Orange
+                    {% elif order.payment_method == 'wave' %}
+                        Wave
+                    {% elif order.payment_method == 'card' %}
+                        Carte Bancaire
+                    {% elif order.payment_method == 'cod' %}
+                        Paiement à la livraison
+                    {% endif %}
+                </p>
+                {% if order.payment_method == 'card' and order.card_number %}
+                    <p><strong>Numéro de carte :</strong> {{ order.card_number }}</p>
+                    <p><strong>Titulaire de la carte :</strong> {{ order.card_holder }}</p>
+                {% elif order.payment_method == 'orange' or order.payment_method == 'wave' and order.phone_number %}
+                    <p><strong>Numéro de téléphone :</strong> {{ order.phone_number }}</p>
+                {% endif %}
                 <p><strong>Adresse de livraison :</strong> {{ order.address.street_address }}, {{ order.address.city }}, {{ order.address.country }}</p>
             </div>
         </div>
@@ -57,6 +104,7 @@
 </section>
 
 <style>
+    /* Styles existants */
     .order-detail-section::before {
         content: '';
         position: absolute;
@@ -155,6 +203,73 @@
         .btn-primary {
             padding: 8px 15px;
             font-size: 0.9rem;
+        }
+    }
+
+    /* Styles pour la barre de progression animée */
+    .tracking-progress {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 30px 0;
+    }
+    .tracking-progress::before {
+        content: '';
+        position: absolute;
+        top: 25px;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #e0e0e0;
+        z-index: 1;
+    }
+    .progress-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+        z-index: 2;
+    }
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        background: #e0e0e0;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.5rem;
+        transition: background 0.5s ease, transform 0.5s ease;
+    }
+    .progress-step.active .step-icon {
+        background: #4a90e2;
+        transform: scale(1.2);
+        animation: pulse 1s infinite;
+    }
+    .progress-step p {
+        margin: 0;
+        font-size: 1rem;
+        color: #2d3748;
+    }
+    .progress-step.active p {
+        font-weight: 600;
+        color: #4a90e2;
+    }
+
+    /* Animation de pulsation */
+    @keyframes pulse {
+        0% {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7);
+        }
+        70% {
+            transform: scale(1.3);
+            box-shadow: 0 0 0 10px rgba(74, 144, 226, 0);
+        }
+        100% {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 0 rgba(74, 144, 226, 0);
         }
     }
 </style>

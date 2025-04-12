@@ -65,8 +65,13 @@ class ManagerCreationForm(CustomUserCreationForm):
 
 class ProfileForm(forms.ModelForm):
     class Meta:
-        model = Profile  # Corrected: UserProfile → Profile
+        model = Profile
         fields = ('bio', 'avatar')
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # Récupère user et le retire des kwargs
+        super().__init__(*args, **kwargs)
+
 
 class AddressForm(forms.ModelForm):
     class Meta:

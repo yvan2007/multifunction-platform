@@ -1,7 +1,7 @@
 # users/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Profile, Address, Favorite, Message
+from .models import CustomUser, Profile, Address, Favorite, Message, Notification  # Ajout de Notification
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -14,6 +14,12 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user',)
     search_fields = ('user__username',)
 
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notification_type', 'message', 'is_read', 'created_at')
+    list_filter = ('notification_type', 'is_read')
+    search_fields = ('user__username', 'message')
+
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = ('user', 'street', 'city', 'country')
@@ -21,11 +27,11 @@ class AddressAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'product', 'created_at')  # Remplacez 'added_at' par 'created_at'
+    list_display = ('user', 'product', 'created_at')
     search_fields = ('user__username', 'product__name')
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'recipient', 'timestamp', 'is_read')  # Remplacez 'sent_at' par 'timestamp'
+    list_display = ('sender', 'recipient', 'timestamp', 'is_read')
     list_filter = ('is_read',)
     search_fields = ('sender__username', 'recipient__username')

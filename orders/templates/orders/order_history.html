@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
 {% block content %}
 <section class="order-history-section" style="padding: 50px 0; background: linear-gradient(135deg, #f5f7fa, #e6f0fa); position: relative; overflow: hidden;">
     <div class="container position-relative">
@@ -132,6 +136,15 @@
         font-style: italic;
         text-align: center;
         margin-top: 40px;
+    }
+    .alert {
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
     }
     @media (max-width: 767px) {
         .section-title {

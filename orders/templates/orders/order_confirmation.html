@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .confirmation-section {
+        padding: 50px 0;
+        background: linear-gradient(135deg, #f5f7fa, #e6f0fa);
+        position: relative;
+        overflow: hidden;
+    }
+    .confirmation-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{% static "images/blog-bg-pattern.png" %}') repeat;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #4a90e2, #f7c948);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+    }
+    .card {
+        background: #ffffff;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    .card-body {
+        padding: 25px;
+    }
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 20px;
+    }
+    .btn-primary {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    .btn-primary i {
+        margin-right: 8px;
+    }
+    .btn-primary:hover {
+        background: #357abd;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    @media (max-width: 767px) {
+        .section-title {
+            font-size: 2.2rem;
+        }
+        .card-title {
+            font-size: 1.3rem;
+        }
+        .btn-primary {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="confirmation-section">
+    <div class="container position-relative">
+        <h2 class="section-title" data-aos="fade-down">Commande Confirmée !</h2>
+
+        <div class="card mb-4" data-aos="fade-up">
+            <div class="card-body">
+                <h5 class="card-title">Merci pour votre commande #{{ order.id }}</h5>
+                <p>Un email de confirmation a été envoyé à votre adresse email.</p>
+                <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                <p><strong>Total :</strong> {{ order.total_price|floatformat:2 }} FCFA</p>
+                <p><strong>Adresse de livraison :</strong> {{ order.address.street_address }}, {{ order.address.city }}, {{ order.address.country }}</p>
+                <p><strong>Méthode de paiement :</strong>
+                    {% if order.payment_method == 'orange_money' %}
+                        Orange Money
+                    {% elif order.payment_method == 'mtn_money' %}
+                        Wave
+                    {% elif order.payment_method == 'card' %}
+                        Carte Bancaire
+                    {% elif order.payment_method == 'cod' %}
+                        Paiement à la livraison
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="text-center" data-aos="fade-up">
+            <a href="{% url 'orders:order_history' %}" class="btn btn-primary"><i class="fas fa-history"></i> Voir l'historique des commandes</a>
+            <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Continuer vos achats</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

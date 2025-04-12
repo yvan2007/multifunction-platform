@@ -57,4 +57,5 @@ urlpatterns = [
     path('manage-orders/delete/<int:order_id>/', views.manager_delete_order, name='manager_delete_order'),
     path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
     path('manager-update-order-status/<int:order_id>/', views.manager_update_order_status, name='manager_update_order_status'),
+    path('notifications/', views.notifications, name='notifications'),
 ]

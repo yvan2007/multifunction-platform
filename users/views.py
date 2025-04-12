@@ -1,3 +1,4 @@
+# users/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -5,12 +6,12 @@ from django.urls import reverse, reverse_lazy
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
-from django.contrib import messages as django_messages
+from django.contrib import messages as django_messages  # Alias déjà utilisé
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth.views import PasswordResetView
+from django.contrib.auth.views import PasswordResetView, PasswordChangeView
 
 # Import des modèles
-from .models import CustomUser, Profile, Address, Favorite, Message
+from .models import CustomUser, Profile, Address, Favorite, Message, Notification  # Ajout de Notification
 from ecommerce.models import Category, Product, Cart, CartItem
 from orders.models import Order
 from blog.models import Article
@@ -248,7 +249,7 @@ class CustomPasswordResetView(PasswordResetView):
         context['title_text'] = title_text
         context['heading_text'] = heading_text
         context['description_text'] = description_text
-        context['cart_item_count'] = get_cart_item_count(self.request.user)  # Added
+        context['cart_item_count'] = get_cart_item_count(self.request.user)
         return context
 
     def form_valid(self, form):
@@ -278,14 +279,26 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
+    """Modifier le profil de l'utilisateur."""
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
         if form.is_valid():
             form.save()
+            django_messages.success(request, "Profil mis à jour avec succès !")
             return redirect('users:profile')
     else:
         form = ProfileForm(instance=request.user.profile)
     return render(request, 'users/edit_profile.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
+
+@login_required
+def change_password(request):
+    """Changer le mot de passe de l'utilisateur."""
+    # Using Django's built-in PasswordChangeView
+    return PasswordChangeView.as_view(
+        template_name='users/change_password.html',
+        success_url=reverse_lazy('users:profile'),
+        extra_context={'cart_item_count': get_cart_item_count(request.user)}
+    )(request)
 
 @login_required
 def account_settings(request):
@@ -294,7 +307,7 @@ def account_settings(request):
     addresses = request.user.addresses.all()
 
     if request.method == 'POST':
-        profile_form = ProfileForm(request.POST, instance=profile)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=profile)
         address_form = AddressForm(request.POST)
         if profile_form.is_valid():
             profile_form.save()
@@ -318,20 +331,28 @@ def account_settings(request):
 
 @login_required
 def favorites(request):
-    """Gérer les favoris de l'utilisateur."""
-    favorites = request.user.favorites.all()
+    """Gérer les favoris de l'utilisateur (articles et produits)."""
+    product_favorites = Favorite.objects.filter(user=request.user)
+    article_favorites = Article.objects.filter(likes=request.user)
+
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         action = request.POST.get('action')
-        product = get_object_or_404(Product, id=product_id)
-        if action == 'add':
-            Favorite.objects.get_or_create(user=request.user, product=product)
-            django_messages.success(request, f"{product.name} ajouté aux favoris !")
-        elif action == 'remove':
-            Favorite.objects.filter(user=request.user, product=product).delete()
-            django_messages.success(request, f"{product.name} retiré des favoris !")
-        return redirect('users:favorites')
-    return render(request, 'users/favorites.html', {'favorites': favorites, 'cart_item_count': get_cart_item_count(request.user)})
+        if product_id and action:
+            product = get_object_or_404(Product, id=product_id)
+            if action == 'add':
+                Favorite.objects.get_or_create(user=request.user, product=product)
+                django_messages.success(request, f"{product.name} ajouté aux favoris !")
+            elif action == 'remove':
+                Favorite.objects.filter(user=request.user, product=product).delete()
+                django_messages.success(request, f"{product.name} retiré des favoris !")
+            return redirect('users:favorites')
+
+    return render(request, 'users/favorites.html', {
+        'product_favorites': product_favorites,
+        'article_favorites': article_favorites,
+        'cart_item_count': get_cart_item_count(request.user)
+    })
 
 @login_required
 def user_messages(request):
@@ -645,6 +666,7 @@ def manage_orders(request):
         'cart_item_count': get_cart_item_count(request.user)
     })
 
+@manager_required
 def manager_update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
@@ -653,8 +675,9 @@ def manager_update_order_status(request, order_id):
             order.status = new_status
             order.save()
 
-            # Send email notification if the status is "delivered"
+            # Send email and create notification if the status is "delivered"
             if new_status == 'delivered':
+                # Email notification (déjà existant)
                 subject = "Votre commande a été livrée !"
                 message = (
                     f"Bonjour {order.user.username},\n\n"
@@ -665,13 +688,19 @@ def manager_update_order_status(request, order_id):
                     f"Si vous avez des questions, n'hésitez pas à nous contacter à support@multifunction.com.\n\n"
                     f"Cordialement,\nL'équipe Multifunction"
                 )
-                recipient_email = order.user.email
                 send_mail(
                     subject,
                     message,
                     settings.DEFAULT_FROM_EMAIL,
-                    [recipient_email],
+                    [order.user.email],
                     fail_silently=False,
+                )
+
+                # Créer une notification pour le client
+                Notification.objects.create(
+                    user=order.user,
+                    notification_type='order_delivered',
+                    message=f"Votre commande #{order.id} a été livrée avec succès."
                 )
 
             django_messages.success(request, f"Statut de la commande {order.id} mis à jour avec succès.")
@@ -700,3 +729,19 @@ def cancel_order(request, order_id):
         else:
             django_messages.error(request, "Cette commande ne peut pas être annulée.")
     return redirect('users:orders')
+
+@login_required
+def notifications(request):
+    """Afficher les notifications de l'utilisateur."""
+    notifications = request.user.notifications.all()
+    # Marquer les notifications comme lues (optionnel)
+    if request.method == 'POST' and 'mark_as_read' in request.POST:
+        notification_ids = request.POST.getlist('notification_ids')
+        request.user.notifications.filter(id__in=notification_ids).update(is_read=True)
+        django_messages.success(request, "Notifications marquées comme lues.")  # Utilisation de django_messages
+        return redirect('users:notifications')
+
+    return render(request, 'users/notifications.html', {
+        'notifications': notifications,
+        'cart_item_count': get_cart_item_count(request.user),
+    })

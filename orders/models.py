@@ -46,8 +46,8 @@ class CartItem(models.Model):
 class Order(models.Model):
     PAYMENT_METHODS = (
         ('orange_money', 'Orange Money'),
-        ('mtn_money', 'Wave'),  # Align with template's "Wave"
-        ('card', 'Carte Bancaire'),  # Align with template's "Carte Bancaire"
+        ('mtn_money', 'Wave'),
+        ('card', 'Carte Bancaire'),
         ('cod', 'Paiement à la livraison'),
     )
     STATUS_CHOICES = (
@@ -85,9 +85,9 @@ class Order(models.Model):
         default='pending'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    # Card details fields (for demonstration purposes only)
+    # Card details fields
     card_number = models.CharField(max_length=20, blank=True, null=True)
-    card_expiry = models.CharField(max_length=5, blank=True, null=True)  # Format: MM/AA
+    card_expiry = models.CharField(max_length=5, blank=True, null=True)
     card_cvv = models.CharField(max_length=4, blank=True, null=True)
     card_holder = models.CharField(max_length=100, blank=True, null=True)
     # Phone number for mobile payments

@@ -663,7 +663,7 @@
             {% for article in articles %}
             <div class="col-md-4 portfolio-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
                 <div class="box">
-                    <a href="{% url 'blog:article_detail' article.slug %}">
+                    <a href="{% url 'blog:article_detail' article.id %}">
                         {% if article.image %}
                             <img src="{{ article.image.url }}" alt="{{ article.title }}" class="img-fluid rounded mb-3">
                         {% else %}

@@ -3,9 +3,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.conf import settings
 from ecommerce.models import Product
 from .models import Cart, CartItem, Order, OrderItem
-from users.models import Address
+from users.models import Address, CustomUser, Notification  # Ajout de Notification et CustomUser
+import time
 
 # Ajouter un produit au panier
 def add_to_cart(request, product_id):
@@ -18,10 +20,9 @@ def add_to_cart(request, product_id):
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
         if not created:
             cart_item.quantity += quantity
-            cart_item.save()
         else:
             cart_item.quantity = quantity
-            cart_item.save()
+        cart_item.save()
     else:
         # Utilisateur non connecté : utiliser la session
         if 'cart' not in request.session:
@@ -67,18 +68,19 @@ def remove_from_cart(request, product_id):
 def cart(request):
     cart_items = []
     total_price = 0
+    cart = None
 
     if request.user.is_authenticated:
         try:
             cart = Cart.objects.get(user=request.user)
             # Get all cart items
-            items = cart.items.all()
+            items = cart.items.all().select_related('product')
             # Filter out items with invalid products
             valid_items = []
             for item in items:
                 try:
                     # Ensure the product exists
-                    product = Product.objects.get(id=item.product.id)
+                    product = item.product
                     valid_items.append(item)
                     total_price += item.total_price
                 except Product.DoesNotExist:
@@ -89,6 +91,7 @@ def cart(request):
         except Cart.DoesNotExist:
             cart_items = []
             total_price = 0
+            cart = None
     else:
         if 'cart' in request.session:
             cart = request.session['cart']
@@ -117,47 +120,23 @@ def cart(request):
 
     return render(request, 'orders/cart.html', {
         'cart_items': cart_items,
-        'is_authenticated': request.user.is_authenticated,
         'total_price': total_price,
     })
 
 # Mettre à jour la quantité d'un produit dans le panier
 @login_required(login_url='users:login')
 def update_cart(request, product_id):
-    """Mettre à jour la quantité d'un élément dans le panier."""
-    if request.user.is_authenticated:
-        # Utilisateur connecté : utiliser le modèle Cart
+    if request.method == 'POST':
         cart = get_object_or_404(Cart, user=request.user)
         cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
-        if request.method == 'POST':
-            quantity = int(request.POST.get('quantity', 1))
-            if quantity > 0:
-                cart_item.quantity = quantity
-                cart_item.save()
-                messages.success(request, "Quantité mise à jour !")
-            else:
-                cart_item.delete()
-                messages.success(request, "Produit retiré du panier !")
-    else:
-        # Utilisateur non connecté : utiliser la session
-        if 'cart' in request.session:
-            cart = request.session['cart']
-            product_id_str = str(product_id)
-            if product_id_str in cart:
-                quantity = int(request.POST.get('quantity', 1))
-                if quantity > 0:
-                    cart[product_id_str] = quantity
-                    messages.success(request, "Quantité mise à jour !")
-                else:
-                    del cart[product_id_str]
-                    messages.success(request, "Produit retiré du panier !")
-                request.session['cart'] = cart
-                request.session.modified = True
-            else:
-                messages.error(request, "Ce produit n'est pas dans votre panier.")
+        quantity = int(request.POST.get('quantity', 1))
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+            messages.success(request, "Quantité mise à jour !")
         else:
-            messages.error(request, "Votre panier est vide.")
-
+            cart_item.delete()
+            messages.success(request, "Produit retiré du panier !")
     return redirect('orders:cart')
 
 # Passer la commande
@@ -165,7 +144,7 @@ def update_cart(request, product_id):
 def checkout(request):
     try:
         cart = Cart.objects.get(user=request.user)
-        cart_items = cart.items.all()
+        cart_items = cart.items.all().select_related('product')
         if not cart_items:
             messages.error(request, "Votre panier est vide.")
             return redirect('orders:cart')
@@ -177,7 +156,7 @@ def checkout(request):
     addresses = Address.objects.filter(user=request.user)
 
     # Calculer le sous-total
-    subtotal = cart.total_amount
+    subtotal = sum(item.total_price for item in cart_items)
 
     # Frais de livraison
     BASE_DELIVERY_COST = 2000  # Frais de base
@@ -193,6 +172,12 @@ def checkout(request):
 
     # Calculer le total final
     total_price = subtotal + delivery_cost
+
+    # Créer un objet cart pour le template
+    cart_obj = type('Cart', (), {
+        'items': cart_items,
+        'total_amount': subtotal
+    })()
 
     if request.method == 'POST':
         # Récupérer l'adresse sélectionnée
@@ -218,7 +203,7 @@ def checkout(request):
                 messages.error(request, "Veuillez remplir tous les champs de la carte bancaire.")
                 return redirect('orders:checkout')
             # Basic validation (you should integrate a payment gateway for real validation)
-            if not card_number.isdigit() or len(card_number) < 16:
+            if not card_number.replace(' ', '').isdigit() or len(card_number.replace(' ', '')) < 16:
                 messages.error(request, "Numéro de carte invalide.")
                 return redirect('orders:checkout')
             if not card_expiry or len(card_expiry) != 5 or card_expiry[2] != '/':
@@ -233,8 +218,8 @@ def checkout(request):
             if not phone_number:
                 messages.error(request, "Veuillez entrer un numéro de téléphone pour le paiement mobile.")
                 return redirect('orders:checkout')
-            # Basic validation for phone number (you can add more specific validation as needed)
-            if not phone_number.startswith('+') or len(phone_number) < 10:
+            # Basic validation for phone number
+            if not phone_number.startswith('+') or len(phone_number.replace(' ', '')) < 10:
                 messages.error(request, "Numéro de téléphone invalide (ex: +225 01 23 45 67 89).")
                 return redirect('orders:checkout')
 
@@ -270,10 +255,10 @@ def checkout(request):
         }
         html_content = render_to_string('ecommerce/emails/order_confirmation.html', context)
         send_mail(
-            'Confirmation de votre commande',
-            'Merci pour votre commande ! Voici les détails.',
-            'from@example.com',
-            [request.user.email],
+            subject='Confirmation de votre commande',
+            message='Merci pour votre commande ! Voici les détails.',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[request.user.email],
             html_message=html_content,
             fail_silently=False,
         )
@@ -284,29 +269,89 @@ def checkout(request):
         return redirect('orders:order_confirmation', order_id=order.id)
 
     return render(request, 'orders/checkout.html', {
-        'cart': cart,  # Passer le cart directement pour le récapitulatif
-        'cart_items': cart_items,
-        'subtotal': subtotal,
-        'delivery_cost': delivery_cost,
-        'total_price': total_price,
-        'payment_method': payment_method,
-        'addresses': addresses,  # Passer les adresses pour le formulaire
+        'cart': cart_obj,  # Passer l'objet cart pour le récapitulatif
+        'addresses': addresses,
     })
 
 # Historique des commandes
 @login_required(login_url='users:login')
 def order_history(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders = Order.objects.filter(user=request.user).select_related('address').prefetch_related('items__product').order_by('-created_at')
     return render(request, 'orders/order_history.html', {'orders': orders})
 
 # Détails d'une commande
 @login_required(login_url='users:login')
 def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(Order.objects.select_related('address').prefetch_related('items__product'), id=order_id, user=request.user)
     return render(request, 'orders/order_detail.html', {'order': order})
 
 # Page de confirmation de commande
 @login_required(login_url='users:login')
 def order_confirmation(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(Order.objects.select_related('address').prefetch_related('items__product'), id=order_id, user=request.user)
     return render(request, 'orders/order_confirmation.html', {'order': order})
+
+def simulate_order_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    status_sequence = ['pending', 'processing', 'shipped', 'delivered']
+
+    for status in status_sequence:
+        order.status = status
+        order.save()
+        messages.success(request, f"Statut mis à jour : {status}")
+        time.sleep(5)  # Attendre 5 secondes entre chaque changement
+
+    return redirect('orders:order_detail', order_id=order.id)
+
+@login_required(login_url='users:login')
+def create_order(request):
+    cart = get_object_or_404(Cart, user=request.user)
+    if not cart.items.exists():
+        messages.error(request, "Votre panier est vide.")
+        return redirect('ecommerce:cart')
+
+    # Créer une nouvelle commande
+    order = Order.objects.create(user=request.user, total_price=cart.get_total_price())
+    for item in cart.items.all():
+        OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, price=item.product.price)
+    
+    # Vider le panier après la commande
+    cart.items.all().delete()
+
+    # Créer une notification pour tous les gestionnaires
+    managers = CustomUser.objects.filter(is_manager=True)
+    for manager in managers:
+        Notification.objects.create(
+            user=manager,
+            notification_type='new_order',
+            message=f"Nouvelle commande #{order.id} passée par {request.user.username}."
+        )
+
+    # Créer une notification pour le client (détails de la commande)
+    Notification.objects.create(
+        user=request.user,
+        notification_type='order_details',
+        message=f"Les détails de votre commande #{order.id} ont été envoyés à votre email."
+    )
+
+    # Envoyer un email au client avec les détails de la commande
+    subject = f"Détails de votre commande #{order.id}"
+    message = (
+        f"Bonjour {request.user.username},\n\n"
+        f"Merci pour votre commande ! Voici les détails :\n"
+        f"Commande ID : {order.id}\n"
+        f"Montant total : {order.total_price} FCFA\n"
+        f"Articles :\n"
+        f"\n".join([f"- {item.product.name} (x{item.quantity}) : {item.price} FCFA" for item in order.items.all()]) +
+        f"\n\nMerci d'avoir choisi Multifunction !"
+    )  # Ajout de la parenthèse fermante
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [request.user.email],
+        fail_silently=False,
+    )
+
+    messages.success(request, "Commande passée avec succès !")
+    return redirect('users:orders')

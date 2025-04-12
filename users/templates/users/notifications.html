@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="section-title">Notifications</h2>
+    {% if notifications %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <button type="submit" name="mark_as_read" class="btn btn-primary">Marquer comme lues</button>
+        </div>
+        <ul class="list-group">
+            {% for notification in notifications %}
+            <li class="list-group-item {% if not notification.is_read %}list-group-item-info{% endif %}">
+                <input type="checkbox" name="notification_ids" value="{{ notification.id }}" class="me-2">
+                <strong>{{ notification.get_notification_type_display }}</strong>: {{ notification.message }}
+                <small class="text-muted float-end">{{ notification.created_at|date:"d/m/Y H:i" }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+    </form>
+    {% else %}
+    <p>Aucune notification pour le moment.</p>
+    {% endif %}
+</div>
+{% endblock %}

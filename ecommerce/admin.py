@@ -2,7 +2,7 @@
 from django.contrib import admin
 from .models import (
     Category, Tag, Product, ProductImage, Review, Cart, CartItem,
-    Payment, Testimonial, NewsletterSubscription, Notification
+    Payment, Testimonial, NewsletterSubscription  # Suppression de Notification
 )
 from orders.models import Order, OrderItem
 
@@ -61,20 +61,13 @@ class NewsletterSubscriptionAdmin(admin.ModelAdmin):
     list_display = ('email', 'subscribed_at')
     search_fields = ('email',)
 
-@admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'message', 'is_read', 'created_at')
-    list_filter = ('is_read',)
-    search_fields = ('user__username', 'message')
-
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'total_price', 'status', 'created_at')
     list_filter = ('status',)
     search_fields = ('id', 'user__username')
 
-# ecommerce/admin.py (extrait)
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ('order', 'product', 'quantity', 'price')  # Supprimez 'created_at'
+    list_display = ('order', 'product', 'quantity', 'price')
     search_fields = ('order__id', 'product__name')

@@ -12,7 +12,7 @@ def blog(request):
 @login_required
 def add_article(request):
     if not request.user.is_manager:
-        return redirect('blog')  # Redirect if the user is not a manager
+        return redirect('blog:blog')  # Redirect if the user is not a manager
 
     if request.method == 'POST':
         form = ArticleForm(request.POST, request.FILES)
@@ -20,7 +20,7 @@ def add_article(request):
             article = form.save(commit=False)
             article.author = request.user
             article.save()
-            return redirect('blog')
+            return redirect('blog:blog')
     else:
         form = ArticleForm()
     
@@ -61,10 +61,10 @@ def like_article(request, article_id):
     else:
         article.likes.add(request.user)
         messages.success(request, "Article ajouté aux favoris !")
-    return redirect('blog:article_detail', slug=article.slug)
+    return redirect('blog:article_detail', article_id=article.id)  # Updated to use article_id
 
-def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug)
+def article_detail(request, article_id):  # Changed from slug to article_id
+    article = get_object_or_404(Article, id=article_id)  # Changed to use id
     comments = article.comments.filter(parent=None)  # N'afficher que les commentaires de premier niveau
     form = CommentForm()
     return render(request, 'blog/article_detail.html', {'article': article, 'comments': comments, 'form': form})
@@ -76,8 +76,8 @@ def articles_by_category(request, category_id):
     return render(request, 'blog/article_list.html', {'articles': articles, 'categories': categories, 'selected_category': category})
 
 @login_required
-def add_comment(request, article_slug):
-    article = get_object_or_404(Article, slug=article_slug)
+def add_comment(request, article_id):  # Changed from article_slug to article_id
+    article = get_object_or_404(Article, id=article_id)  # Changed to use id
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -86,14 +86,14 @@ def add_comment(request, article_slug):
             comment.author = request.user
             comment.save()
             messages.success(request, "Commentaire ajouté avec succès !")
-            return redirect('blog:article_detail', slug=article.slug)
+            return redirect('blog:article_detail', article_id=article.id)  # Updated to use article_id
     else:
         form = CommentForm()
     return render(request, 'blog/comment_form.html', {'form': form, 'article': article})
 
 @login_required
-def reply_comment(request, article_slug, comment_id):
-    article = get_object_or_404(Article, slug=article_slug)
+def reply_comment(request, article_id, comment_id):  # Changed from article_slug to article_id
+    article = get_object_or_404(Article, id=article_id)  # Changed to use id
     parent_comment = get_object_or_404(Comment, id=comment_id)
     if request.method == 'POST':
         form = CommentForm(request.POST)
@@ -104,7 +104,7 @@ def reply_comment(request, article_slug, comment_id):
             reply.parent = parent_comment
             reply.save()
             messages.success(request, "Réponse ajoutée avec succès !")
-            return redirect('blog:article_detail', slug=article.slug)
+            return redirect('blog:article_detail', article_id=article.id)  # Updated to use article_id
     else:
         form = CommentForm()
     return render(request, 'blog/comment_form.html', {'form': form, 'article': article, 'parent_comment': parent_comment})
