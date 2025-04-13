@@ -225,6 +225,10 @@
         textarea::first-letter {
             text-transform: none !important;
         }
+        .cart-icon-0::before { content: "\f07a"; } /* fa-cart-shopping (vide) */
+        .cart-icon-1::before { content: "\f217"; } /* fa-cart-plus (1 article) */
+        .cart-icon-2::before { content: "\f218"; } /* fa-cart-arrow-down (2 articles) */
+        .cart-icon-3::before { content: "\f07a"; color: #ff0000; } /* fa-cart-shopping avec couleur (3+ articles) */
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -266,10 +270,10 @@
                 </ul>
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'orders:cart' %}">
-                            <i class="fa-solid fa-cart-shopping"></i> Panier 
-                            {% if cart_count > 0 %}
-                                <span class="badge">{{ cart_count }}</span>
+                        <a class="nav-link" href="{% url 'ecommerce:cart_detail' %}">
+                            <i id="cart-icon" class="fa-solid {% if cart_item_count == 0 %}fa-cart-shopping{% else %}fa-cart-plus{% endif %}"></i> Panier 
+                            {% if cart_item_count > 0 %}
+                                <span class="badge">{{ cart_item_count }}</span>
                             {% endif %}
                         </a>
                     </li>
@@ -286,7 +290,12 @@
                                         <li><a class="dropdown-item" href="{% url 'users:favorites' %}"><i class="fa-solid fa-heart"></i> Favoris</a></li>
                                     {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</a></li>
+                                    <li>
+                                        <form action="{% url 'users:logout' %}" method="POST" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item"><i class="fa-solid fa-sign-out-alt"></i> Déconnexion</button>
+                                        </form>
+                                    </li>
                                 </ul>                                    
                             </div>
                         {% else %}

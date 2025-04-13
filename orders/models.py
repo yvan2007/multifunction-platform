@@ -1,6 +1,7 @@
 # orders/models.py
 from django.db import models
 from django.conf import settings
+from django.urls import reverse  # Added for get_absolute_url
 
 class Cart(models.Model):
     user = models.ForeignKey(
@@ -19,7 +20,6 @@ class Cart(models.Model):
         """Calculate the total amount of the cart."""
         return sum(item.total_price for item in self.items.all())
 
-# Modèle pour les éléments du panier
 class CartItem(models.Model):
     cart = models.ForeignKey(
         Cart,
@@ -43,7 +43,6 @@ class CartItem(models.Model):
         """Calculate the total price for this cart item (price * quantity)."""
         return self.product.price * self.quantity
 
-# Modèle pour une commande
 class Order(models.Model):
     PAYMENT_METHODS = (
         ('orange_money', 'Orange Money'),
@@ -86,21 +85,17 @@ class Order(models.Model):
         default='pending'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    # Card details fields
-    card_number = models.CharField(max_length=20, blank=True, null=True)
-    card_expiry = models.CharField(max_length=5, blank=True, null=True)
-    card_cvv = models.CharField(max_length=4, blank=True, null=True)
-    card_holder = models.CharField(max_length=100, blank=True, null=True)
-    # Phone number for mobile payments
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
 
+    def get_absolute_url(self):
+        return reverse('orders:order_detail', kwargs={'order_id': self.id})
+
     class Meta:
         ordering = ['-created_at']
 
-# Modèle pour les éléments d'une commande
 class OrderItem(models.Model):
     order = models.ForeignKey(
         Order,

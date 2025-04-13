@@ -1,13 +1,10 @@
-# users/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from ecommerce.models import Product
 from django.conf import settings
-from django.contrib.auth.models import User
 
 class CustomUser(AbstractUser):
     is_manager = models.BooleanField(default=False)
-    secret_code = models.CharField(max_length=10, blank=True, null=True)
+    secret_code = models.CharField(max_length=36, blank=True, null=True)
 
     def generate_secret_code(self):
         import random
@@ -20,27 +17,30 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,  # Remplacer User par settings.AUTH_USER_MODEL
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='profile'
     )
     bio = models.TextField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Profile of {self.user.username}"
+        return f"Profil de {self.user.username}"
 
 class Address(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # Remplacer User par settings.AUTH_USER_MODEL
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='addresses'
     )
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
+    zip_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100)
     is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -48,51 +48,57 @@ class Address(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.street}, {self.city}, {self.postal_code}, {self.country}"
+        return f"{self.street}, {self.city}, {self.zip_code}, {self.country}"
 
 class Favorite(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='favorites'  # Cette relation inverse permet d'utiliser request.user.favorites
+        related_name='favorites'
     )
     product = models.ForeignKey(
-        'ecommerce.Product',  # Assumes that the Product model is in the ecommerce app
+        'ecommerce.Product',
         on_delete=models.CASCADE,
         related_name='favorited_by'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'product')  # Un utilisateur ne peut ajouter un produit qu'une seule fois dans ses favoris
+        unique_together = ('user', 'product')
 
     def __str__(self):
         return f"{self.user.username} favors {self.product.name}"
 
 class Message(models.Model):
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_messages')
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_messages'
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_messages'
+    )
     subject = models.CharField(max_length=255)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        # Vérifier que le message est entre un client et un gestionnaire
-        if self.sender.is_manager and not self.recipient.is_manager:
-            pass  # Gestionnaire -> Client : OK
-        elif not self.sender.is_manager and self.recipient.is_manager:
-            pass  # Client -> Gestionnaire : OK
-        else:
-            raise ValueError("Les messages ne peuvent être envoyés qu'entre clients et gestionnaires.")
+        if not (self.sender.is_manager ^ self.recipient.is_manager):
+            raise ValueError("Les messages doivent être entre clients et gestionnaires.")
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"De {self.sender} à {self.recipient} - {self.subject}"
 
-# users/models.py
 class Notification(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
     message = models.CharField(max_length=255)
     notification_type = models.CharField(
         max_length=50,
@@ -109,17 +115,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.message} pour {self.user.username}"
-    
+
 class PaymentMethod(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # Remplacer User par settings.AUTH_USER_MODEL
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='payment_methods'
     )
-    card_type = models.CharField(max_length=50)  # Ex: "Visa", "MasterCard"
+    card_type = models.CharField(max_length=50)
     last_four_digits = models.CharField(max_length=4)
     expiry_date = models.DateField()
     is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if self.is_default:
@@ -127,4 +134,4 @@ class PaymentMethod(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.card_type} ending in {self.last_four_digits}"
+        return f"{self.card_type} ****{self.last_four_digits}"

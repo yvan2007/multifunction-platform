@@ -638,7 +638,7 @@
                             <span>Nouveau</span>
                         </div>
                     </a>
-                    <form method="post" action="{% url 'orders:add_to_cart' product.id %}">
+                    <form method="post" action="{% url 'ecommerce:add_to_cart' product.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary mt-2">
                             <i class="fa-solid fa-cart-plus"></i> Ajouter au panier

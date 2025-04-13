@@ -1,13 +1,10 @@
-# users/forms.py
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
 from django_ckeditor_5.widgets import CKEditor5Widget
-from .models import CustomUser, Profile, Address, Message
-from blog.models import Article, Category as BlogCategory
+from .models import CustomUser, Profile, Address, Message, PaymentMethod
+from blog.models import Article
 from ecommerce.models import Category, Product, ProductImage
-from .models import Address, PaymentMethod
-from django.contrib.auth.models import User
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
@@ -28,7 +25,6 @@ class CustomAuthenticationForm(AuthenticationForm):
                 raise forms.ValidationError("Nom d'utilisateur/email ou mot de passe incorrect.")
             elif not self.user_cache.is_active:
                 raise forms.ValidationError("Ce compte est inactif.")
-            # Vérification supplémentaire pour les managers
             if self.user_cache.is_manager and not secret_code:
                 raise forms.ValidationError("Le code secret est requis pour les gestionnaires.")
             if self.user_cache.is_manager and secret_code != self.user_cache.secret_code:
@@ -66,30 +62,32 @@ class ManagerCreationForm(CustomUserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2']
 
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ('bio', 'profile_picture')  # Remplacé 'avatar' par 'profile_picture'
+        fields = ['bio', 'profile_picture']
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)  # Récupère user et le retire des kwargs
-        super().__init__(*args, **kwargs)
-        # Exemple de logique optionnelle avec user
-        # if self.user and self.user.is_manager:
-        #     self.fields['bio'].required = True
-
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
-        fields = ['street', 'city', 'postal_code', 'country', 'is_default']
+        fields = ['street', 'city', 'zip_code', 'country', 'is_default']
         widgets = {
             'street': forms.TextInput(attrs={'class': 'form-control'}),
             'city': forms.TextInput(attrs={'class': 'form-control'}),
-            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'zip_code': forms.TextInput(attrs={'class': 'form-control'}),
             'country': forms.TextInput(attrs={'class': 'form-control'}),
             'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -103,7 +101,7 @@ class ArticleForm(forms.ModelForm):
         model = Article
         fields = ['title', 'content', 'category', 'tags', 'status', 'image']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre de l\'article'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Titre de l'article"}),
             'content': CKEditor5Widget(attrs={'class': 'django_ckeditor_5'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
@@ -137,14 +135,6 @@ class ProductForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-        labels = {
-            'name': 'Nom du produit',
-            'description': 'Description',
-            'price': 'Prix (FCFA)',
-            'stock': 'Stock',
-            'category': 'Catégorie',
-            'is_active': 'Produit actif',
-        }
 
 class ProductImageForm(forms.ModelForm):
     class Meta:
@@ -166,29 +156,17 @@ class MessageForm(forms.ModelForm):
         model = Message
         fields = ['recipient', 'subject', 'body']
         widgets = {
+            'recipient': forms.Select(attrs={'class': 'form-control'}),
             'subject': forms.TextInput(attrs={'class': 'form-control'}),
             'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
         }
-
-class AddressForm(forms.ModelForm):
-    class Meta:
-        model = Address
-        fields = ['street', 'city', 'postal_code', 'country']
 
 class PaymentMethodForm(forms.ModelForm):
     class Meta:
         model = PaymentMethod
         fields = ['card_type', 'last_four_digits', 'expiry_date']
         widgets = {
-            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+            'card_type': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_four_digits': forms.TextInput(attrs={'class': 'form-control'}),
+            'expiry_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
-
-class UserForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ['username', 'email']
-
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = Profile
-        fields = ['bio', 'profile_picture']

@@ -60,6 +60,29 @@
         color: #2d3748;
         margin-bottom: 20px;
     }
+    .order-items {
+        margin-top: 20px;
+    }
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .order-item img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        margin-right: 15px;
+        border-radius: 5px;
+    }
+    .order-item-details {
+        flex-grow: 1;
+    }
+    .order-item-details p {
+        margin: 5px 0;
+        color: #555;
+    }
     .btn-primary {
         background: #4a90e2;
         border: none;
@@ -79,6 +102,15 @@
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
+    .btn-link {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .btn-link:hover {
+        color: #357abd;
+        text-decoration: underline;
+    }
     @media (max-width: 767px) {
         .section-title {
             font-size: 2.2rem;
@@ -89,6 +121,13 @@
         .btn-primary {
             padding: 8px 15px;
             font-size: 0.9rem;
+        }
+        .order-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .order-item img {
+            margin-bottom: 10px;
         }
     }
 </style>
@@ -105,7 +144,7 @@
                 <p>Un email de confirmation a été envoyé à votre adresse email.</p>
                 <p><strong>Date :</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
                 <p><strong>Total :</strong> {{ order.total_price|floatformat:2 }} FCFA</p>
-                <p><strong>Adresse de livraison :</strong> {{ order.address.street_address }}, {{ order.address.city }}, {{ order.address.country }}</p>
+                <p><strong>Adresse de livraison :</strong> {{ order.address.street }}, {{ order.address.city }}, {{ order.address.country }}</p>
                 <p><strong>Méthode de paiement :</strong>
                     {% if order.payment_method == 'orange_money' %}
                         Orange Money
@@ -117,11 +156,31 @@
                         Paiement à la livraison
                     {% endif %}
                 </p>
+
+                <!-- Liste des articles commandés -->
+                <div class="order-items">
+                    <h6>Articles commandés :</h6>
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        {% if item.product.primary_image %}
+                        <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                        <img src="{% static 'images/default-product.jpg' %}" alt="Image par défaut">
+                        {% endif %}
+                        <div class="order-item-details">
+                            <p><strong>{{ item.product.name }}</strong></p>
+                            <p>Quantité : {{ item.quantity }}</p>
+                            <p>Prix unitaire : {{ item.price|floatformat:2 }} FCFA</p>
+                            <p>Total : {{ item.total_price|floatformat:2 }} FCFA</p>
+                            <p><a href="{% url 'ecommerce:product_detail' item.product.slug %}" class="btn-link">Voir le produit (stock restant : {{ item.product.stock }})</a></p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
         <div class="text-center" data-aos="fade-up">
-            <a href="{% url 'orders:order_history' %}" class="btn btn-primary"><i class="fas fa-history"></i> Voir l'historique des commandes</a>
             <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> Continuer vos achats</a>
         </div>
     </div>

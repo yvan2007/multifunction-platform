@@ -435,8 +435,8 @@
 
 {% block extra_js %}
 <script>
-// Script pour la galerie d'images
 document.addEventListener('DOMContentLoaded', function () {
+    // Gestion des miniatures
     const mainImage = document.querySelector('.main-image');
     const thumbnails = document.querySelectorAll('.thumbnail-gallery img');
 
@@ -449,35 +449,43 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Zoom sur l'image principale
-    mainImage.addEventListener('click', function () {
-        this.classList.toggle('zoomed');
-    });
+    if (mainImage) {
+        mainImage.addEventListener('click', function () {
+            this.classList.toggle('zoomed');
+        });
+    }
 
     // Gestion de l'ajout au panier via AJAX
-    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
+    const addToCartForm = document.querySelector('.add-to-cart-form');
+    if (addToCartForm) {
+        addToCartForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const url = this.getAttribute('href');
-            const productId = this.getAttribute('data-product-id');
-            const quantity = 1; // Par défaut, on ajoute 1 article
+            const url = this.action;
+            const productId = this.querySelector('.add-to-cart-btn').getAttribute('data-product-id');
 
             fetch(url, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                body: new FormData(this)
             })
             .then(response => response.json())
             .then(data => {
                 showToast(data.message, data.success ? 'success' : 'error');
                 if (data.success) {
-                    // Mettre à jour le badge du panier
+                    // Mettre à jour le badge
                     const cartBadge = document.querySelector('.badge');
                     if (cartBadge) {
                         cartBadge.textContent = data.cart_count;
-                        cartBadge.style.display = 'inline-block';
+                        cartBadge.style.display = data.cart_count > 0 ? 'inline-block' : 'none';
+                    }
+
+                    // Mettre à jour l'icône du panier
+                    const cartIcon = document.querySelector('#cart-icon');
+                    if (cartIcon) {
+                        cartIcon.className = 'fa-solid ' + (data.cart_count > 0 ? 'fa-cart-plus' : 'fa-cart-shopping');
                     }
                 }
             })
@@ -486,21 +494,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 showToast('Une erreur est survenue.', 'error');
             });
         });
-    });
+    }
 
     // Fonction pour afficher un toast
     function showToast(message, type) {
         const toastContainer = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast toast-${type} show`;
-        toast.innerHTML = `
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
+        toast.innerHTML = `<div class="toast-body">${message}</div>`;
         toastContainer.appendChild(toast);
 
-        // Faire disparaître le toast après 3 secondes
         setTimeout(() => {
             toast.classList.remove('show');
             toast.addEventListener('transitionend', () => toast.remove());
@@ -561,9 +564,18 @@ document.addEventListener('DOMContentLoaded', function () {
                             <i class="fas fa-cart-plus"></i> Terminé
                         </button>
                     {% else %}
-                        <a href="{% url 'ecommerce:add_to_cart' product.id %}" class="btn btn-success add-to-cart-btn" data-product-id="{{ product.id }}">
-                            <i class="fas fa-cart-plus"></i> Ajouter au panier
-                        </a>
+                        {% if request.user.is_authenticated %}
+                            <form method="post" action="{% url 'ecommerce:add_to_cart' product.id %}" class="add-to-cart-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success add-to-cart-btn" data-product-id="{{ product.id }}">
+                                    <i class="fas fa-cart-plus"></i> Ajouter au panier
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'users:login' %}?next={% url 'ecommerce:product_detail' product.slug %}" class="btn btn-success">
+                                <i class="fas fa-cart-plus"></i> Connectez-vous pour ajouter au panier
+                            </a>
+                        {% endif %}
                         <a href="{% url 'ecommerce:checkout' %}" class="btn btn-primary">
                             <i class="fas fa-shopping-bag"></i> Acheter maintenant
                         </a>

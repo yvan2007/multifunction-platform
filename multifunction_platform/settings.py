@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django_ckeditor_5',
     'axes',
     'widget_tweaks',
+    
     # 'channels' a été retiré
 ]
 
@@ -68,7 +69,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'orders.context_processors.cart_count',
+                
+                'ecommerce.context_processors.cart_count',  # Ajoute ceci
             ],
         },
     },

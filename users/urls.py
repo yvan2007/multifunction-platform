@@ -9,7 +9,7 @@ urlpatterns = [
     # Authentication routes
     path('login/', views.login_view, name='login'),
     path('manager-login/', views.manager_login_view, name='manager_login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page=reverse_lazy('users:login')), name='logout'),
+    path('logout/', views.logout_view, name='logout'),  # Utiliser logout_view personnalisé
     path('register/', views.register, name='register'),
 
     # Password reset flow
@@ -72,5 +72,6 @@ urlpatterns = [
     path('set-default-payment-method/<int:method_id>/', views.set_default_payment_method, name='set_default_payment_method'),
     path('delete-payment-method/<int:method_id>/', views.delete_payment_method, name='delete_payment_method'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
-    path('favorites/', views.favorites_list, name='favorites_list'),
+    path('favorites/', views.favorites_list, name='favorites_list'),  # Note: doublon avec 'favorites', à vérifier
+    path('address/create/', views.address_create, name='address_create'),
 ]
