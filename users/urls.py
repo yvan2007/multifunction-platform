@@ -1,3 +1,4 @@
+# users/urls.py
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 from . import views
@@ -56,6 +57,20 @@ urlpatterns = [
     path('manage-orders/update/<int:order_id>/', views.manager_update_order_status, name='manager_update_order_status'),
     path('manage-orders/delete/<int:order_id>/', views.manager_delete_order, name='manager_delete_order'),
     path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
-    path('manager-update-order-status/<int:order_id>/', views.manager_update_order_status, name='manager_update_order_status'),
     path('notifications/', views.notifications, name='notifications'),
+    path('notifications/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/metadata/', views.get_notification_metadata, name='notification_metadata'),
+    path('messages/', views.user_messages, name='messages'),
+    path('compose-message/', views.compose_message, name='compose_message'),
+    path('mark-read/<int:message_id>/', views.mark_message_read, name='mark_message_read'),
+    path('delete-message/<int:message_id>/', views.delete_message, name='delete_message'),
+    path('account-settings/', views.account_settings, name='account_settings'),
+    path('add-address/', views.add_address, name='add_address'),
+    path('set-default-address/<int:address_id>/', views.set_default_address, name='set_default_address'),
+    path('delete-address/<int:address_id>/', views.delete_address, name='delete_address'),
+    path('add-payment-method/', views.add_payment_method, name='add_payment_method'),
+    path('set-default-payment-method/<int:method_id>/', views.set_default_payment_method, name='set_default_payment_method'),
+    path('delete-payment-method/<int:method_id>/', views.delete_payment_method, name='delete_payment_method'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
+    path('favorites/', views.favorites_list, name='favorites_list'),
 ]

@@ -1,3 +1,4 @@
+# multifunction_platform/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -34,14 +35,15 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Admin
+    path('admin/', admin.site.urls),
+
     # App-specific URL includes with namespaces
     path('orders/', include('orders.urls', namespace='orders')),
-    path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),
     path('blog/', include('blog.urls', namespace='blog')),
     path('ecommerce/', include('ecommerce.urls', namespace='ecommerce')),
     path('users/', include('users.urls', namespace='users')),
-    
+
     # Core application views
     path('', index, name='index'),
     path('search/', search_products, name='search_products'),
@@ -52,12 +54,13 @@ urlpatterns = [
     path('add-testimonial/', add_testimonial, name='add_testimonial'),
     path('delete-testimonial/<int:testimonial_id>/', delete_testimonial, name='delete_testimonial'),
     path('subscribe/', subscribe, name='subscribe'),
-    
+
     # API and documentation endpoints
-    path('api-auth/', include('rest_framework.urls')),
+    path('api-auth/', include('rest_framework.urls')),  # Déplacé avant 'api/'
+    path('api/', include(router.urls)),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    
+
     # CKEditor 5 file upload
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),
 ]

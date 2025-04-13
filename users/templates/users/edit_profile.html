@@ -1,36 +1,251 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Modifier le profil{% endblock %}
+{% block title %}Modifier le profil - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 40px auto;
+    }
+    .profile-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        padding: 30px;
+    }
+    .section-title {
+        font-size: 2rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .subsection-title {
+        font-size: 1.3rem;
+        color: #4a90e2;
+        margin-top: 20px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    .subsection-title::after {
+        content: '';
+        width: 40px;
+        height: 3px;
+        background-color: #f7c948;
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #2d3748;
+    }
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+        transition: border-color 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #4a90e2;
+        box-shadow: 0 0 5px rgba(74, 144, 226, 0.2);
+    }
+    .btn-primary, .btn-success {
+        padding: 10px 20px;
+        font-weight: 500;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #4a90e2;
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #357abd;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border: none;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    .profile-picture-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .profile-picture {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #4a90e2;
+        margin-bottom: 10px;
+    }
+    .profile-picture-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #6c757d;
+        border: 3px solid #4a90e2;
+        margin-bottom: 10px;
+    }
+    .error-message {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    @media (max-width: 576px) {
+        .profile-container {
+            margin: 20px;
+            padding: 15px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+        }
+        .profile-card {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="card shadow-sm p-4">
-        <h2 class="mb-4">Modifier le profil</h2>
-        <form method="post">
-            {% csrf_token %}  <!-- Assurez-vous que cette ligne est présente -->
-            <div class="mb-3">
-                <label for="first_name" class="form-label">Prénom</label>
-                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+<div class="profile-container">
+    <div class="profile-card">
+        <h2 class="section-title">Modifier le profil</h2>
+
+        <!-- Messages d'alerte -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             </div>
-            <div class="mb-3">
-                <label for="last_name" class="form-label">Nom</label>
-                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="profile-form">
+            {% csrf_token %}
+
+            <!-- Prévisualisation de la photo de profil -->
+            <div class="profile-picture-container">
+                {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture" id="profile-picture-preview">
+                {% else %}
+                    <div class="profile-picture-placeholder" id="profile-picture-preview">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <label for="id_profile_picture" class="btn btn-primary btn-sm">
+                        <i class="fas fa-camera me-2"></i> Changer la photo
+                    </label>
+                    <input type="file" name="profile_picture" id="id_profile_picture" style="display: none;" accept="image/*">
+                </div>
             </div>
-            <div class="mb-3">
-                <label for="username" class="form-label">Nom d'utilisateur</label>
-                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
-            </div>
+
+            <!-- Formulaire pour CustomUser -->
+            <h4 class="subsection-title">Informations personnelles</h4>
+            {% for field in user_form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="error-message">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Formulaire pour Profile -->
+            <h4 class="subsection-title">Profil</h4>
+            {% for field in profile_form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="error-message">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Bouton pour changer le mot de passe -->
             <div class="mb-3">
                 <a href="{% url 'users:password_change' %}" class="btn btn-primary w-100">
                     <i class="fas fa-lock me-2"></i> Changer le mot de passe
                 </a>
             </div>
+
+            <!-- Bouton de soumission -->
             <button type="submit" class="btn btn-success w-100">Enregistrer</button>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prévisualisation de la photo de profil
+    const profilePictureInput = document.getElementById('id_profile_picture');
+    const profilePicturePreview = document.getElementById('profile-picture-preview');
+
+    profilePictureInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profilePicturePreview.src = e.target.result;
+                profilePicturePreview.classList.remove('profile-picture-placeholder');
+                profilePicturePreview.classList.add('profile-picture');
+                profilePicturePreview.innerHTML = '';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Validation côté client (exemple : vérifier que les champs obligatoires sont remplis)
+    const form = document.getElementById('profile-form');
+    form.addEventListener('submit', function(event) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('input[required], textarea[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = 'Ce champ est requis.';
+                field.parentElement.appendChild(errorMessage);
+            }
+        });
+
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+
+    // Supprimer les messages d'erreur précédents lors de la saisie
+    form.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            const existingError = field.parentElement.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

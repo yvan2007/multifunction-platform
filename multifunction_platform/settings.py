@@ -1,11 +1,19 @@
+# multifunction_platform/settings.py
 import os
 from pathlib import Path
 from django.contrib.messages import constants as message_constants
 from decouple import config
 
+import logging
+
+# Configurer les logs pour ne pas afficher les informations sensibles
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Charger les variables depuis le fichier .env
 SECRET_KEY = config('SECRET_KEY')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
@@ -24,8 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'multifunction_platform',
-    'users',
+    'users.apps.UsersConfig',
     'ecommerce',
     'blog',
     'orders',
@@ -34,6 +41,7 @@ INSTALLED_APPS = [
     'django_ckeditor_5',
     'axes',
     'widget_tweaks',
+    # 'channels' a été retiré
 ]
 
 MIDDLEWARE = [
@@ -60,13 +68,14 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'orders.context_processors.cart_count',  # Keep only this one
+                'orders.context_processors.cart_count',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'multifunction_platform.wsgi.application'
+# ASGI_APPLICATION a été retiré car nous n'utilisons plus channels
 
 DATABASES = {
     'default': {
@@ -87,7 +96,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Désactiver HTTPS en développement
 if DEBUG:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
@@ -96,20 +104,16 @@ else:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    # HSTS (en production uniquement)
-    SECURE_HSTS_SECONDS = 31536000  # 1 an
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Désactiver la rotation du jeton CSRF en développement (pour tester)
 CSRF_COOKIE_ROTATE = False
 
-# Configuration de django-axes
-AXES_FAILURE_LIMIT = 20  # Verrouillage après 5 tentatives échouées
-AXES_COOLOFF_TIME = 1  # Verrouillage pendant 1 heure
+AXES_FAILURE_LIMIT = 20
+AXES_COOLOFF_TIME = 1
 AXES_RESET_ON_SUCCESS = True
 
-# Cache pour django-axes
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -122,11 +126,9 @@ CACHES = {
 AXES_CACHE = 'axes'
 LOGIN_URL = 'users:login'
 
-# Sécurité des sessions
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# Protection contre le clickjacking
 X_FRAME_OPTIONS = 'DENY'
 
 LANGUAGE_CODE = 'fr-fr'
@@ -144,7 +146,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# Configuration CKEditor 5
 CKEDITOR_5_CONFIGS = {
     'default': {
         "toolbar": [
@@ -161,7 +162,6 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-# Messages Bootstrap
 MESSAGE_TAGS = {
     message_constants.DEBUG: 'alert-info',
     message_constants.INFO: 'alert-info',
@@ -170,19 +170,15 @@ MESSAGE_TAGS = {
     message_constants.ERROR: 'alert-danger',
 }
 
-# Configuration Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# EMAIL_HOST_USER et EMAIL_HOST_PASSWORD sont maintenant lus depuis .env
 DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
-# Session Configuration for Cart
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = True
 
-# Configuration de la journalisation
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -211,7 +207,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        '': {  # Logger racine pour capturer tous les logs, y compris ceux de users.apps
+        '': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
@@ -221,7 +217,7 @@ LOGGING = {
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Permettre l'accès à tous pour l'API (à ajuster selon vos besoins)
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',

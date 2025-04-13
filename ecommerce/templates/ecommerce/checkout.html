@@ -1,33 +1,132 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_js %}
-    <script src="{% static 'ecommerce/js/checkout.js' %}"></script>
+{% block extra_css %}
+<style>
+    .checkout-section {
+        padding: 50px 0;
+    }
+    .cart-summary {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    .cart-summary h3 {
+        font-size: 1.8rem;
+        color: #2d3748;
+        margin-bottom: 20px;
+    }
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .cart-item img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+    .cart-item-details {
+        flex-grow: 1;
+        margin-left: 15px;
+    }
+    .cart-item-details h5 {
+        font-size: 1.2rem;
+        color: #2d3748;
+    }
+    .cart-item-details p {
+        font-size: 1rem;
+        color: #4a5568;
+    }
+    .cart-total {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #e53e3e;
+        margin-top: 20px;
+        text-align: right;
+    }
+    .checkout-form .form-group {
+        margin-bottom: 15px;
+    }
+    .checkout-form .form-control {
+        border-radius: 50px;
+        padding: 10px 15px;
+    }
+    .checkout-btn {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 50px;
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .checkout-btn:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Finaliser votre commande</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="id_country">Pays</label>
-            <select name="country" id="id_country" class="form-control" required>
-                <option value="">Sélectionnez un pays</option>
-                <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                <option value="France">France</option>
-                <option value="Sénégal">Sénégal</option>
-                <!-- Add more countries as needed -->
-            </select>
+<section class="checkout-section">
+    <div class="container">
+        <h2>Récapitulatif de votre commande</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="cart-summary">
+            <h3>Vos articles</h3>
+            {% for item in cart_items %}
+                <div class="cart-item">
+                    <img src="{% if item.product.primary_image %}{{ item.product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" alt="{{ item.product.name }}">
+                    <div class="cart-item-details">
+                        <h5>{{ item.product.name }}</h5>
+                        <p>{{ item.quantity }} x {{ item.product.price|floatformat:2 }} FCFA</p>
+                    </div>
+                    <p>{{ item.subtotal|floatformat:2 }} FCFA</p>
+                </div>
+            {% empty %}
+                <p>Votre panier est vide.</p>
+            {% endfor %}
+            <div class="cart-total">
+                Total : {{ total_price|floatformat:2 }} FCFA
+            </div>
         </div>
-        <div class="form-group">
-            <label for="id_city">Ville</label>
-            <select name="city" id="id_city" class="form-control" required>
-                <option value="">Sélectionnez une ville</option>
-            </select>
-        </div>
-        <!-- Add other fields as needed -->
-        <button type="submit" class="btn btn-primary">Confirmer la commande</button>
-    </form>
-</div>
+        <form method="post" class="checkout-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_country">Pays</label>
+                <select name="country" id="id_country" class="form-control" required>
+                    <option value="">Sélectionnez un pays</option>
+                    <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                    <option value="France">France</option>
+                    <option value="Sénégal">Sénégal</option>
+                    <!-- Add more countries as needed -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="id_city">Ville</label>
+                <select name="city" id="id_city" class="form-control" required>
+                    <option value="">Sélectionnez une ville</option>
+                    <!-- Add cities dynamically via JavaScript if needed -->
+                </select>
+            </div>
+            <button type="submit" class="checkout-btn">Confirmer la commande</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

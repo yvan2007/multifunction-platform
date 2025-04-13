@@ -1,11 +1,9 @@
+# users/apps.py
 from django.apps import AppConfig
-import logging
-
-logger = logging.getLogger(__name__)
 
 class UsersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'users'
 
     def ready(self):
-        logger.info(f"Loading app: {self.name}")
+        import users.signals  # Importer les signaux

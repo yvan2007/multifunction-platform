@@ -1,10 +1,13 @@
+# users/forms.py
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate
 from django_ckeditor_5.widgets import CKEditor5Widget
-from .models import CustomUser, Profile, Address
+from .models import CustomUser, Profile, Address, Message
 from blog.models import Article, Category as BlogCategory
 from ecommerce.models import Category, Product, ProductImage
+from .models import Address, PaymentMethod
+from django.contrib.auth.models import User
 
 class CustomAuthenticationForm(AuthenticationForm):
     login_field = forms.CharField(label="Email ou Nom d'utilisateur", max_length=254)
@@ -66,12 +69,18 @@ class ManagerCreationForm(CustomUserCreationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ('bio', 'avatar')
+        fields = ('bio', 'profile_picture')  # Remplacé 'avatar' par 'profile_picture'
+        widgets = {
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)  # Récupère user et le retire des kwargs
         super().__init__(*args, **kwargs)
-
+        # Exemple de logique optionnelle avec user
+        # if self.user and self.user.is_manager:
+        #     self.fields['bio'].required = True
 
 class AddressForm(forms.ModelForm):
     class Meta:
@@ -145,3 +154,41 @@ class ProductImageForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control'}),
             'alt_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Texte alternatif pour l'image"}),
         }
+
+class MessageForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        recipient_queryset = kwargs.pop('recipient_queryset', None)
+        super().__init__(*args, **kwargs)
+        if recipient_queryset is not None:
+            self.fields['recipient'].queryset = recipient_queryset
+
+    class Meta:
+        model = Message
+        fields = ['recipient', 'subject', 'body']
+        widgets = {
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+        }
+
+class AddressForm(forms.ModelForm):
+    class Meta:
+        model = Address
+        fields = ['street', 'city', 'postal_code', 'country']
+
+class PaymentMethodForm(forms.ModelForm):
+    class Meta:
+        model = PaymentMethod
+        fields = ['card_type', 'last_four_digits', 'expiry_date']
+        widgets = {
+            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['bio', 'profile_picture']

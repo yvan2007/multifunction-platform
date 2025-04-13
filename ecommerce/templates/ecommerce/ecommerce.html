@@ -2,66 +2,671 @@
 {% load static %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'ecommerce/css/product_card.css' %}">
+<!-- Inclure AOS CSS -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<!-- Inclure Font Awesome pour les icônes -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    .product-card {
+        transition: opacity 0.3s ease;
+    }
+
+    .product-out-of-stock {
+        opacity: 0.5;
+        filter: grayscale(100%);
+    }
+    /* Général */
+    body {
+        background-color: #f8f9fa;
+    }
+    .ecommerce-section {
+        padding: 50px 0;
+    }
+    .container {
+        max-width: 1300px;
+    }
+
+    /* Bannière Offre Spéciale */
+    .special-offer {
+        background: linear-gradient(135deg, #007bff, #00c4b4);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        margin-bottom: 40px;
+    }
+    .special-offer h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    .special-offer p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    .special-offer .btn {
+        background-color: #fff;
+        color: #007bff;
+        font-weight: 600;
+        border-radius: 50px;
+        padding: 10px 25px;
+        transition: all 0.3s ease;
+    }
+    .special-offer .btn:hover {
+        background-color: #0056b3;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* Sidebar Catégories */
+    .category-sidebar {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 20px;
+    }
+    .category-sidebar h3 {
+        font-size: 1.8rem;
+        color: #2d3748;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .category-sidebar h3::after {
+        content: '';
+        width: 50px;
+        height: 3px;
+        background-color: #007bff;
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+    }
+    .category-sidebar .list-group-item {
+        border: none;
+        padding: 12px 15px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .category-sidebar .list-group-item a {
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        display: block;
+    }
+    .category-sidebar .list-group-item:hover {
+        background-color: #f1f5f9;
+        transform: translateX(5px);
+    }
+    .category-sidebar .list-group-item.active {
+        background-color: #007bff;
+    }
+    .category-sidebar .list-group-item.active a {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* Cartes de produits */
+    .product-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .product-card {
+        background-color: #fff;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        width: 100%;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    .product-card img {
+        height: 220px;
+        object-fit: cover;
+        border-bottom: 1px solid #eee;
+    }
+    .product-card-body {
+        padding: 15px;
+        text-align: center;
+    }
+    .product-card-body h5 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .product-card-body .price {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #e53e3e;
+        margin-bottom: 15px;
+    }
+    .product-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn-primary, .btn-success, .btn-outline-danger {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border: none;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    .btn-outline-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    .btn-outline-danger:hover,
+    .btn-outline-danger.favorited {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    .btn i {
+        font-size: 1rem;
+    }
+
+    /* Loader */
+    .spinner {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .spinner i {
+        font-size: 2rem;
+        color: #007bff;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Load More Button */
+    .load-more-btn {
+        display: block;
+        margin: 30px auto;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .load-more-btn:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    /* Messages Toast */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+    .toast {
+        min-width: 300px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Filtres et recherche */
+    .filters {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    .filters .form-control,
+    .filters .form-select,
+    .filters .form-check {
+        max-width: 200px;
+        border-radius: 50px;
+        border: 1px solid #ced4da;
+        padding: 8px 15px;
+        transition: all 0.3s ease;
+    }
+    .filters .form-check {
+        display: flex;
+        align-items: center;
+        border: none;
+        padding: 0;
+    }
+    .filters .form-check-input {
+        margin-right: 8px;
+    }
+    .filters .form-check-label {
+        font-size: 0.9rem;
+        color: #4a5568;
+    }
+    .filters .form-control:focus,
+    .filters .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+    /* Responsivité */
+    @media (max-width: 768px) {
+        .category-sidebar {
+            position: static;
+            margin-bottom: 30px;
+        }
+        .product-card img {
+            height: 180px;
+        }
+        .product-card-body h5 {
+            font-size: 1.1rem;
+        }
+        .product-actions {
+            flex-direction: column;
+        }
+        .btn-primary, .btn-success, .btn-outline-danger {
+            width: 100%;
+        }
+        .filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filters .form-control,
+        .filters .form-select,
+        .filters .form-check {
+            max-width: 100%;
+        }
+    }
+    
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <!-- Sidebar for categories -->
-        <div class="col-md-3">
-            <h3>Catégories</h3>
-            <ul class="list-group">
-                <li class="list-group-item">
-                    <a href="{% url 'ecommerce:ecommerce' %}">Toutes les catégories</a>
-                </li>
-                {% for category in categories %}
-                    <li class="list-group-item">
-                        <a href="{% url 'ecommerce:ecommerce' %}?category={{ category.id }}">{{ category.name }}</a>
-                    </li>
-                {% empty %}
-                    <li class="list-group-item">Aucune catégorie disponible pour le moment.</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- Product list -->
-        <div class="col-md-9">
-            <!-- Special Offer Banner -->
-            <div class="card mb-4" style="background-color: #007bff; color: white;">
-                <div class="card-body">
-                    <h3>Offre Spéciale</h3>
-                    <p>Découvrez nos nouveaux produits avec des réductions exclusives !</p>
-                    <a href="#" class="btn btn-light">Voir les offres</a>
+<section class="ecommerce-section">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar for categories -->
+            <div class="col-md-3">
+                <div class="category-sidebar" data-aos="fade-right">
+                    <h3>Catégories</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item {% if not selected_category %}active{% endif %}">
+                            <a href="#" class="category-link" data-category="">Toutes les catégories</a>
+                        </li>
+                        {% for category in categories %}
+                            <li class="list-group-item {% if selected_category and selected_category.name == category.name %}active{% endif %}">
+                                <a href="#" class="category-link" data-category="{{ category.name }}">{{ category.name }}</a>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">Aucune catégorie disponible pour le moment.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
 
-            <h2>Nos Produits</h2>
-            <div class="row" id="product-list">
-                {% for product in products %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card product-card">
-                            <img src="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;" loading="lazy">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ product.name }}</h5>
-                                <p class="card-text">{{ product.price|floatformat:2 }} FCFA</p>
-                                <a href="{% url 'ecommerce:product_detail' product.slug %}" class="btn btn-primary">
-                                    <i class="fas fa-eye"></i> Voir les détails
-                                </a>
-                                <a href="{% url 'ecommerce:add_to_cart' product.id %}" class="btn btn-success">
-                                    <i class="fas fa-cart-plus"></i> Ajouter au panier
-                                </a>
-                                <a href="{% url 'users:favorites' %}?product_id={{ product.id }}&action=add" class="btn btn-outline-danger">
-                                    <i class="fas fa-heart"></i>
-                                </a>
-                            </div>
-                        </div>
+            <!-- Product list -->
+            <div class="col-md-9">
+                <!-- Special Offer Banner -->
+                <div class="special-offer" data-aos="fade-up">
+                    <h3>Offre Spéciale</h3>
+                    <p>Découvrez nos nouveaux produits avec des réductions exclusives !</p>
+                    <a href="{% url 'ecommerce:promotions' %}" class="btn">Voir les offres</a>
+                </div>
+
+                <h2 data-aos="fade-up">Nos Produits</h2>
+                {% if search_query %}
+                    <p data-aos="fade-up">Résultats pour : "{{ search_query }}"</p>
+                {% endif %}
+                {% if not products %}
+                    <p data-aos="fade-up">Aucun produit trouvé pour votre recherche.</p>
+                {% endif %}
+
+                <!-- Filtres : Recherche, Tri, Prix, Disponibilité -->
+                <div class="filters" data-aos="fade-up">
+                    <input type="text" id="search-products" class="form-control" placeholder="Rechercher un produit..." value="{{ search_query|default:'' }}">
+                    <select id="sort-products" class="form-select">
+                        <option value="default" {% if not sort or sort == 'default' %}selected{% endif %}>Trier par</option>
+                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Prix : Croissant</option>
+                        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Prix : Décroissant</option>
+                        <option value="date_desc" {% if sort == 'date_desc' %}selected{% endif %}>Plus récent</option>
+                    </select>
+                    <input type="number" id="min-price" class="form-control" placeholder="Prix min" value="{{ min_price|default:'' }}" min="0">
+                    <input type="number" id="max-price" class="form-control" placeholder="Prix max" value="{{ max_price|default:'' }}" min="0">
+                    <div class="form-check">
+                        <input type="checkbox" id="in-stock" class="form-check-input" {% if in_stock == 'true' %}checked{% endif %}>
+                        <label for="in-stock" class="form-check-label">En stock uniquement</label>
                     </div>
-                {% empty %}
-                    <p>Aucun produit disponible.</p>
-                {% endfor %}
+                </div>
+
+                <div class="product-grid" id="product-list">
+                    {% for product in products %}
+                        {% with delay=forloop.counter|add:-1 %}
+                            {% with aos_delay=delay|add:delay|add:delay|add:delay|add:delay|add:delay|add:delay|add:delay|add:delay|add:delay %}
+                                <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="{{ aos_delay }}00">
+                                    <div class="product-card">
+                                        <a href="{% url 'ecommerce:product_detail' product.slug %}">
+                                            <img src="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" class="card-img-top" alt="{{ product.name }}" loading="lazy">
+                                        </a>
+                                        <div class="product-card-body">
+                                            <h5>{{ product.name }}</h5>
+                                            <p class="price">{{ product.price|floatformat:2 }} FCFA</p>
+                                            <div class="product-actions">
+                                                <a href="{% url 'ecommerce:product_detail' product.slug %}" class="btn btn-primary">
+                                                    <i class="fas fa-eye"></i> Voir les détails
+                                                </a>
+                                                <button class="btn btn-success add-to-cart" data-product-id="{{ product.id }}">
+                                                    <i class="fas fa-cart-plus"></i> Ajouter au panier
+                                                </button>
+                                                <button class="btn btn-outline-danger add-to-favorites" data-product-id="{{ product.id }}" data-favorited="{% if request.user.is_authenticated and product in request.user.favorites.all %}true{% else %}false{% endif %}">
+                                                    <i class="fas fa-heart"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                        {% endwith %}
+                    {% empty %}
+                        <p>Aucun produit disponible.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Loader -->
+                <div class="spinner" id="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                </div>
+
+                <!-- Load More Button -->
+                {% if products %}
+                    <button class="load-more-btn" id="load-more" data-page="1">Charger plus</button>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Inclure AOS JS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<!-- Inclure une fonction pour récupérer le CSRF token -->
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+</script>
+<script>
+    // Initialiser AOS
+    AOS.init({
+        duration: 800,
+        once: true,
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const productList = document.getElementById('product-list');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const loadMoreBtn = document.getElementById('load-more');
+        const toastContainer = document.getElementById('toast-container');
+        const searchInput = document.getElementById('search-products');
+        const sortSelect = document.getElementById('sort-products');
+        const minPriceInput = document.getElementById('min-price');
+        const maxPriceInput = document.getElementById('max-price');
+        const inStockCheckbox = document.getElementById('in-stock');
+
+        // Fonction pour afficher un toast
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.role = 'alert';
+            toast.ariaLive = 'assertive';
+            toast.ariaAtomic = 'true';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Fonction pour récupérer les paramètres de requête
+        function getQueryParams() {
+            const params = new URLSearchParams();
+            const category = encodeURIComponent(new URLSearchParams(window.location.search).get('category') || '');
+            const search = encodeURIComponent(searchInput.value || '');
+            const sort = encodeURIComponent(sortSelect.value || 'default');
+            const minPrice = encodeURIComponent(minPriceInput.value || '');
+            const maxPrice = encodeURIComponent(maxPriceInput.value || '');
+            const inStock = inStockCheckbox.checked ? 'true' : '';
+
+            if (category) params.set('category', category);
+            if (search) params.set('search', search);
+            if (sort !== 'default') params.set('sort', sort);
+            if (minPrice) params.set('min_price', minPrice);
+            if (maxPrice) params.set('max_price', maxPrice);
+            if (inStock) params.set('in_stock', inStock);
+
+            return params.toString();
+        }
+
+        // Fonction pour charger les produits (utilisée pour recherche, tri, et catégories)
+        function loadProducts(page = 1, reset = false) {
+            const queryString = getQueryParams();
+            const url = `/ecommerce/?${queryString}&page=${page}`;
+            console.log("Fetching URL:", url); // Log pour débogage
+            loadingSpinner.style.display = 'block';
+            if (reset) productList.innerHTML = ''; // Réinitialiser la liste si nécessaire
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data received:", data); // Log pour débogage
+                if (reset) {
+                    productList.innerHTML = data.html;
+                } else {
+                    productList.insertAdjacentHTML('beforeend', data.html);
+                }
+                loadingSpinner.style.display = 'none';
+                if (data.has_next) {
+                    loadMoreBtn.style.display = 'block';
+                    loadMoreBtn.setAttribute('data-page', page);
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+                AOS.refresh(); // Rafraîchir AOS pour les nouveaux éléments
+
+                // Ré-attacher les écouteurs d'événements pour les nouveaux boutons
+                attachEventListeners();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Une erreur est survenue lors du chargement des produits.', 'danger');
+                loadingSpinner.style.display = 'none';
+                loadMoreBtn.style.display = 'block';
+            });
+        }
+
+        // Fonction pour attacher les écouteurs d'événements aux boutons
+        function attachEventListeners() {
+            // Gestion de "Ajouter au panier" (AJAX)
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.removeEventListener('click', handleAddToCart); // Éviter les doublons
+                button.addEventListener('click', handleAddToCart);
+            });
+
+            // Gestion de "Ajouter aux favoris" (AJAX)
+            document.querySelectorAll('.add-to-favorites').forEach(button => {
+                button.removeEventListener('click', handleAddToFavorites); // Éviter les doublons
+                button.addEventListener('click', handleAddToFavorites);
+            });
+        }
+
+        function handleAddToCart(event) {
+            event.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+            fetch(`/ecommerce/add-to-cart/${productId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || 'Une erreur est survenue.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Une erreur est survenue lors de l\'ajout au panier.', 'danger');
+            });
+        }
+
+        function handleAddToFavorites(event) {
+            event.preventDefault();
+            const productId = this.getAttribute('data-product-id');
+            const isFavorited = this.getAttribute('data-favorited') === 'true';
+
+            fetch(`/ecommerce/toggle-favorite/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: new FormData()
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.setAttribute('data-favorited', data.is_favorited.toString());
+                    if (data.is_favorited) {
+                        this.classList.add('favorited');
+                    } else {
+                        this.classList.remove('favorited');
+                    }
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || 'Une erreur est survenue.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Une erreur est survenue lors de la mise à jour des favoris.', 'danger');
+            });
+        }
+
+        // Gestion des catégories (filtre AJAX)
+        const categoryLinks = document.querySelectorAll('.category-link');
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const category = encodeURIComponent(this.getAttribute('data-category'));
+                window.history.pushState({}, '', `/ecommerce/?category=${category}`);
+                loadProducts(1, true);
+
+                // Mettre à jour l'état actif
+                document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active'));
+                this.parentElement.classList.add('active');
+            });
+        });
+
+        // Gestion de la recherche
+        searchInput.addEventListener('input', function() {
+            loadProducts(1, true);
+        });
+
+        // Gestion du tri
+        sortSelect.addEventListener('change', function() {
+            loadProducts(1, true);
+        });
+
+        // Gestion des nouveaux filtres
+        minPriceInput.addEventListener('input', function() {
+            loadProducts(1, true);
+        });
+        maxPriceInput.addEventListener('input', function() {
+            loadProducts(1, true);
+        });
+        inStockCheckbox.addEventListener('change', function() {
+            loadProducts(1, true);
+        });
+
+        // Gestion de "Charger plus" (pagination infinie)
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                const page = parseInt(this.getAttribute('data-page')) + 1;
+                loadProducts(page);
+            });
+        }
+
+        // Attacher les écouteurs d'événements initiaux
+        attachEventListeners();
+
+        // Charger les produits immédiatement si un paramètre de catégorie est présent
+        const categoryParam = new URLSearchParams(window.location.search).get('category');
+        if (categoryParam) {
+            loadProducts(1, true);
+        }
+    });
+</script>
 {% endblock %}

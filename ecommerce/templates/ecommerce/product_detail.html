@@ -1,194 +1,683 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ product.name }}{% endblock %}
-
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+    /* Reset et styles globaux */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Section principale */
     .product-detail-section {
-        padding: 40px 0;
+        padding: 60px 0;
+        background-color: #f8f9fa;
     }
-    .product-detail-section .container {
+
+    /* Conteneur principal */
+    .product-container {
         max-width: 1200px;
+        margin: 0 auto;
     }
-    .product-image {
+
+    /* Grille pour image et détails */
+    .product-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    /* Section image */
+    .product-image-gallery {
         position: relative;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        opacity: 1;
+        transition: opacity 0.3s ease;
     }
-    .product-image img {
+
+    .product-image-gallery.out-of-stock {
+        opacity: 0.5;
+        filter: grayscale(100%);
+    }
+
+    .main-image {
         width: 100%;
-        height: 400px;
+        height: 500px;
         object-fit: cover;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        cursor: zoom-in;
     }
-    .thumbnails {
+
+    .main-image:hover {
+        transform: scale(1.02);
+    }
+
+    .thumbnail-gallery {
         display: flex;
         gap: 10px;
-        margin-top: 10px;
-        justify-content: center;
+        margin-top: 15px;
+        overflow-x: auto;
     }
-    .thumbnail-img {
-        width: 60px;
-        height: 60px;
+
+    .thumbnail-gallery img {
+        width: 80px;
+        height: 80px;
         object-fit: cover;
-        border: 2px solid #ddd;
-        border-radius: 5px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: border-color 0.3s ease;
+        border: 2px solid transparent;
+        transition: border 0.3s ease;
     }
-    .thumbnail-img:hover {
-        border-color: #007bff;
+
+    .thumbnail-gallery img:hover,
+    .thumbnail-gallery img.active {
+        border: 2px solid #007bff;
     }
-    .product-info {
+
+    /* Section détails */
+    .product-details {
         padding: 20px;
+        opacity: 1;
+        transition: opacity 0.3s ease;
     }
-    .product-info h1 {
+
+    .product-details.out-of-stock {
+        opacity: 0.5;
+    }
+
+    .product-title {
         font-size: 2.5rem;
-        font-weight: 700;
-        color: #333;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 10px;
+    }
+
+    .price-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
         margin-bottom: 15px;
     }
-    .product-info .price {
+
+    .price {
         font-size: 1.8rem;
         font-weight: 600;
-        color: #e74c3c;
-        margin-bottom: 15px;
+        color: #e53e3e;
     }
-    .product-info .description {
-        font-size: 1.1rem;
-        color: #555;
-        margin-bottom: 20px;
-        line-height: 1.6;
+
+    .original-price {
+        font-size: 1.2rem;
+        color: #a0aec0;
+        text-decoration: line-through;
     }
-    .product-info .stock {
+
+    .discount-badge {
+        background-color: #28a745;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .stock {
         font-size: 1rem;
         color: #28a745;
         margin-bottom: 20px;
     }
+
+    .out-of-stock {
+        color: #e53e3e;
+    }
+
+    .product-description {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.8;
+        margin-bottom: 30px;
+    }
+
     .product-actions {
         display: flex;
         gap: 15px;
-        margin-bottom: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
     }
-    .btn-primary, .btn-success {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 25px;
-        font-size: 1.1rem;
+
+    .btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+        font-weight: 500;
         border-radius: 50px;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         text-transform: uppercase;
-        font-weight: 600;
+        letter-spacing: 0.5px;
     }
-    .btn-primary {
-        background-color: #007bff;
-        border: none;
-    }
-    .btn-primary:hover {
-        background-color: #0056b3;
-    }
+
     .btn-success {
         background-color: #28a745;
         border: none;
+        color: #fff;
     }
+
     .btn-success:hover {
         background-color: #218838;
+        transform: translateY(-2px);
     }
-    .btn i {
-        margin-right: 8px;
-    }
-    .favorite-btn {
-        font-size: 1.5rem;
+
+    .btn-primary {
+        background-color: #007bff;
         border: none;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .btn.disabled {
+        background-color: #a0aec0;
+        cursor: not-allowed;
+    }
+
+    .favorite-btn {
         background: none;
+        border: none;
+        font-size: 1.8rem;
         cursor: pointer;
-        transition: color 0.3s ease;
+        transition: all 0.3s ease;
     }
-    .favorite-btn:hover {
-        color: #dc3545;
+
+    .favorite-btn i {
+        transition: all 0.3s ease;
     }
+
+    .favorite-btn:hover i {
+        transform: scale(1.2);
+    }
+
     .product-meta {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 10px;
-        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #718096;
     }
+
     .product-meta p {
-        margin: 5px 0;
-        color: #666;
-        font-size: 0.95rem;
+        margin-bottom: 5px;
     }
+
+    .product-meta strong {
+        color: #2d3748;
+    }
+
+    /* Produits similaires */
+    .related-products {
+        margin-top: 60px;
+    }
+
+    .related-products h3 {
+        font-size: 2rem;
+        color: #1a202c;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .related-products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    .related-product-card {
+        background-color: #fff;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+    }
+
+    .related-product-card.out-of-stock {
+        opacity: 0.5;
+        filter: grayscale(100%);
+    }
+
+    .related-product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .related-product-card img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .related-product-card-body {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .related-product-card-body h5 {
+        font-size: 1.2rem;
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .related-product-card-body p {
+        font-size: 1.1rem;
+        color: #e53e3e;
+        font-weight: 500;
+    }
+
+    /* Section avis */
+    .review-section {
+        margin-top: 60px;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-section h3 {
+        font-size: 2rem;
+        color: #1a202c;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .review-card {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 20px 0;
+    }
+
+    .review-card:last-child {
+        border-bottom: none;
+    }
+
+    .review-card .rating {
+        color: #f1c40f;
+        margin-bottom: 10px;
+    }
+
+    .review-card p {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    .review-card small {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+
+    .review-form {
+        margin-top: 40px;
+    }
+
+    .review-form h4 {
+        font-size: 1.5rem;
+        color: #1a202c;
+        margin-bottom: 20px;
+    }
+
+    .review-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .review-form label {
+        font-size: 1rem;
+        color: #2d3748;
+        font-weight: 500;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .review-form .form-control {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .review-form .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        outline: none;
+    }
+
+    .review-form .btn {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 12px 30px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+    }
+
+    .review-form .btn:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    /* Toast Notification Styles */
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+
+    .toast {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        min-width: 250px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .toast.show {
+        opacity: 1;
+    }
+
+    .toast-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .toast-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Responsive design */
     @media (max-width: 768px) {
-        .product-image img {
-            height: 300px;
+        .product-grid {
+            grid-template-columns: 1fr;
         }
-        .product-info h1 {
+
+        .main-image {
+            height: 350px;
+        }
+
+        .product-title {
             font-size: 2rem;
         }
-        .product-actions {
-            flex-direction: column;
+
+        .price {
+            font-size: 1.5rem;
         }
-        .btn-primary, .btn-success {
-            width: 100%;
+
+        .related-products-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .related-product-card img {
+            height: 250px;
         }
     }
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+// Script pour la galerie d'images
+document.addEventListener('DOMContentLoaded', function () {
+    const mainImage = document.querySelector('.main-image');
+    const thumbnails = document.querySelectorAll('.thumbnail-gallery img');
+
+    thumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', function () {
+            thumbnails.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            mainImage.src = this.src;
+        });
+    });
+
+    // Zoom sur l'image principale
+    mainImage.addEventListener('click', function () {
+        this.classList.toggle('zoomed');
+    });
+
+    // Gestion de l'ajout au panier via AJAX
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            const productId = this.getAttribute('data-product-id');
+            const quantity = 1; // Par défaut, on ajoute 1 article
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                showToast(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    // Mettre à jour le badge du panier
+                    const cartBadge = document.querySelector('.badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                        cartBadge.style.display = 'inline-block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showToast('Une erreur est survenue.', 'error');
+            });
+        });
+    });
+
+    // Fonction pour afficher un toast
+    function showToast(message, type) {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type} show`;
+        toast.innerHTML = `
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        toastContainer.appendChild(toast);
+
+        // Faire disparaître le toast après 3 secondes
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
-<section class="product-detail-section">
-    <div class="container">
-        <div class="row">
-            <!-- Product Image -->
-            <div class="col-md-6">
-                <div class="product-image">
-                    {% if product.primary_image %}
-                        <img src="{{ product.primary_image.image.url }}" alt="{{ product.primary_image.alt_text|default:product.name }}" id="main-image">
-                    {% else %}
-                        <img src="https://via.placeholder.com/400" alt="Image par défaut" id="main-image">
-                    {% endif %}
-                </div>
-                <!-- Thumbnails -->
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<section class="product-detail-section" aria-label="Détails du produit">
+    <div class="container product-container">
+        <div class="product-grid">
+            <!-- Product Image Gallery -->
+            <div class="product-image-gallery {% if product.is_out_of_stock %}out-of-stock{% endif %}">
+                <img src="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" class="main-image" alt="{{ product.name }}" loading="lazy">
                 {% if product.images.count > 1 %}
-                <div class="thumbnails">
-                    {% for image in product.images.all|slice:":4" %}
-                        <img src="{{ image.image.url }}" class="thumbnail-img" alt="{{ image.alt_text|default:product.name }}" onclick="document.getElementById('main-image').src=this.src;">
-                    {% endfor %}
-                </div>
+                    <div class="thumbnail-gallery">
+                        {% for image in product.images.all %}
+                            <img src="{{ image.image.url }}" alt="{{ product.name }} - Image {{ forloop.counter }}" class="{% if forloop.first %}active{% endif %}" loading="lazy">
+                        {% endfor %}
+                    </div>
                 {% endif %}
             </div>
-            <!-- Product Info -->
-            <div class="col-md-6">
-                <div class="product-info">
-                    <h1>{{ product.name }}</h1>
-                    <p class="price">{{ product.price|floatformat:2 }} FCFA</p>
-                    <p class="description">{{ product.description }}</p>
-                    <p class="stock">En stock</p>
-                    <div class="product-actions">
-                        <a href="{% url 'orders:add_to_cart' product.id %}" class="btn btn-success">
+
+            <!-- Product Details -->
+            <div class="product-details {% if product.is_out_of_stock %}out-of-stock{% endif %}">
+                <h1 class="product-title">{{ product.name }}</h1>
+                <div class="price-container">
+                    <span class="price">
+                        {% if product.discount > 0 %}
+                            {{ product.discounted_price|floatformat:2 }} FCFA
+                        {% else %}
+                            {{ product.price|floatformat:2 }} FCFA
+                        {% endif %}
+                    </span>
+                    {% if product.discount > 0 %}
+                        <span class="original-price">{{ product.price|floatformat:2 }} FCFA</span>
+                        <span class="discount-badge">{{ product.discount }}% OFF</span>
+                    {% endif %}
+                </div>
+                <p class="stock {% if product.is_out_of_stock %}out-of-stock{% endif %}">
+                    {% if product.is_out_of_stock %}
+                        Terminé
+                    {% else %}
+                        En stock ({{ product.stock }} disponibles)
+                    {% endif %}
+                </p>
+                <div class="product-description">
+                    {{ product.description|linebreaks }}
+                </div>
+                <div class="product-actions">
+                    {% if product.is_out_of_stock %}
+                        <button class="btn btn-secondary disabled" disabled>
+                            <i class="fas fa-cart-plus"></i> Terminé
+                        </button>
+                    {% else %}
+                        <a href="{% url 'ecommerce:add_to_cart' product.id %}" class="btn btn-success add-to-cart-btn" data-product-id="{{ product.id }}">
                             <i class="fas fa-cart-plus"></i> Ajouter au panier
                         </a>
-                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary">
+                        <a href="{% url 'ecommerce:checkout' %}" class="btn btn-primary">
                             <i class="fas fa-shopping-bag"></i> Acheter maintenant
                         </a>
-                    </div>
-                    {% if request.user.is_authenticated %}
-                    <form method="post" action="{% url 'ecommerce:toggle_favorite' product.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="favorite-btn">
-                            <i class="fas {% if product in user.favorites.all %}fa-heart text-danger{% else %}fa-heart text-muted{% endif %}"></i>
-                        </button>
-                    </form>
                     {% endif %}
-                    <div class="product-meta">
-                        <p><strong>Catégorie :</strong> {{ product.category.name }}</p>
-                        <p><strong>Publié le :</strong> {{ product.created_at|date:"d M Y" }}</p>
-                    </div>
+                    <!-- Bouton Favoris -->
+                    {% if request.user.is_authenticated %}
+                        <form method="post" action="{% url 'ecommerce:toggle_favorite' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="favorite-btn" aria-label="{% if is_favorited %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}">
+                                <i class="fas {% if is_favorited %}fa-heart text-danger{% else %}fa-heart text-muted{% endif %}"></i>
+                            </button>
+                        </form>
+                    {% else %}
+                        <p><a href="{% url 'users:login' %}">Connectez-vous</a> pour ajouter ce produit à vos favoris.</p>
+                    {% endif %}
+                </div>
+                <div class="product-meta">
+                    <p><strong>Catégorie :</strong> {{ product.category.name }}</p>
+                    <p><strong>Tags :</strong> 
+                        {% for tag in product.tags.all %}
+                            <span class="badge badge-primary">{{ tag.name }}</span>
+                            {% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Aucun tag
+                        {% endfor %}
+                    </p>
                 </div>
             </div>
+        </div>
+
+        <!-- Related Products -->
+        <div class="related-products" aria-label="Produits similaires">
+            <h3>Produits similaires</h3>
+            <div class="related-products-grid">
+                {% for related in related_products %}
+                    <div class="related-product-card {% if related.is_out_of_stock %}out-of-stock{% endif %}">
+                        <a href="{% url 'ecommerce:product_detail' related.slug %}">
+                            <img src="{% if related.primary_image %}{{ related.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" alt="{{ related.name }}" loading="lazy">
+                        </a>
+                        <div class="related-product-card-body">
+                            <h5>{{ related.name }}</h5>
+                            <p>
+                                {% if related.discount > 0 %}
+                                    {{ related.discounted_price|floatformat:2 }} FCFA
+                                    <span class="original-price">{{ related.price|floatformat:2 }} FCFA</span>
+                                {% else %}
+                                    {{ related.price|floatformat:2 }} FCFA
+                                {% endif %}
+                            </p>
+                            <p class="stock {% if related.is_out_of_stock %}out-of-stock{% endif %}">
+                                {% if related.is_out_of_stock %}
+                                    Terminé
+                                {% else %}
+                                    En stock ({{ related.stock }} disponibles)
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-center">Aucun produit similaire trouvé.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="review-section" aria-label="Avis des clients">
+            <h3>Avis des clients</h3>
+            {% for review in reviews %}
+                <div class="review-card">
+                    <div class="rating">
+                        {% for i in "12345" %}
+                            <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    <p>{{ review.comment }}</p>
+                    <small>Par {{ review.user.username }} le {{ review.created_at|date:"d M Y" }}</small>
+                </div>
+            {% empty %}
+                <p class="text-center">Aucun avis pour ce produit pour le moment.</p>
+            {% endfor %}
+
+            <!-- Review Form -->
+            {% if request.user.is_authenticated %}
+                {% if has_ordered and not has_reviewed %}
+                    <div class="review-form">
+                        <h4>Laisser un avis</h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="id_rating">Note :</label>
+                                <select name="rating" id="id_rating" class="form-control" required>
+                                    <option value="">Sélectionnez une note</option>
+                                    <option value="1">1 étoile</option>
+                                    <option value="2">2 étoiles</option>
+                                    <option value="3">3 étoiles</option>
+                                    <option value="4">4 étoiles</option>
+                                    <option value="5">5 étoiles</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_comment">Commentaire :</label>
+                                <textarea name="comment" id="id_comment" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn">Soumettre l'avis</button>
+                        </form>
+                    </div>
+                {% elif not has_ordered %}
+                    <p class="text-center">Vous devez avoir commandé ce produit pour laisser un avis.</p>
+                {% elif has_reviewed %}
+                    <p class="text-center">Vous avez déjà laissé un avis pour ce produit.</p>
+                {% endif %}
+            {% else %}
+                <p class="text-center"><a href="{% url 'users:login' %}">Connectez-vous</a> pour laisser un avis.</p>
+            {% endif %}
         </div>
     </div>
 </section>

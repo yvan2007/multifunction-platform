@@ -263,7 +263,9 @@
                 <div class="banner mb-4" data-aos="fade-left">
                     <h2>Offre Spéciale</h2>
                     <p>Découvrez nos nouveaux produits avec des réductions exclusives !</p>
-                    <a href="#" class="btn btn-light">Voir les offres</a>
+                    <a href="{% url 'ecommerce:promotions' %}" class="btn btn-light">
+                        <i class="fas fa-tags me-2"></i> Voir les offres
+                    </a>
                 </div>
                 <!-- Liste des produits -->
                 <div class="row" id="product-list">

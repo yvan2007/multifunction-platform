@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Promotions{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Section principale */
+    .promotions-section {
+        padding: 60px 0;
+        background-color: #f8f9fa;
+    }
+
+    /* Conteneur principal */
+    .promotions-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Titre de la section */
+    .promotions-title {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 40px;
+        text-align: center;
+    }
+
+    /* Grille des produits en promotion */
+    .promotions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    .promotion-card {
+        background-color: #fff;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .promotion-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .promotion-card img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .promotion-card-body {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .promotion-card-body h5 {
+        font-size: 1.2rem;
+        color: #2d3748;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .promotion-card-body .price {
+        font-size: 1.1rem;
+        color: #e53e3e;
+        font-weight: 500;
+    }
+
+    .promotion-card-body .original-price {
+        font-size: 0.9rem;
+        color: #a0aec0;
+        text-decoration: line-through;
+        margin-left: 5px;
+    }
+
+    .promotion-card-body .discount {
+        font-size: 0.9rem;
+        color: #28a745;
+        font-weight: 500;
+    }
+
+    .no-promotions {
+        font-size: 1.2rem;
+        color: #718096;
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .promotions-title {
+            font-size: 2rem;
+        }
+
+        .promotions-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .promotion-card img {
+            height: 250px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="promotions-section" aria-label="Promotions">
+    <div class="promotions-container">
+        <h1 class="promotions-title">Promotions</h1>
+        {% if products %}
+            <div class="promotions-grid">
+                {% for product in products %}
+                    <div class="promotion-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter|divisibleby:3|yesno:'0,100,200' }}">
+                        <a href="{% url 'ecommerce:product_detail' product.slug %}">
+                            <img src="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}" alt="{{ product.name }}" loading="lazy">
+                        </a>
+                        <div class="promotion-card-body">
+                            <h5>{{ product.name }}</h5>
+                            <p>
+                                <span class="price">{{ product.discounted_price|floatformat:2 }} FCFA</span>
+                                <span class="original-price">{{ product.price|floatformat:2 }} FCFA</span>
+                            </p>
+                            <p class="discount">{{ product.discount }}% OFF</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-promotions">Aucune promotion disponible pour le moment.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

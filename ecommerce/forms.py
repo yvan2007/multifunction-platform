@@ -15,11 +15,14 @@ class ProductImageForm(forms.ModelForm):
         model = ProductImage
         fields = ['image', 'alt_text']
 
+from django import forms
+from .models import Review
+
 class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = ['rating', 'comment']
         widgets = {
-            'comment': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Votre commentaire...'}),
-            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'placeholder': 'Note de 1 à 5'}),
+            'rating': forms.HiddenInput(),  # Le champ sera géré via JavaScript
+            'comment': forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Votre commentaire...'}),
         }

@@ -10,6 +10,24 @@
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+    }
+    .back-arrow {
+        font-size: 24px;
+        cursor: pointer;
+        color: #007bff;
+        text-decoration: none;
     }
     .profile-header {
         text-align: center;
@@ -36,6 +54,35 @@
         padding: 5px 10px;
         border-radius: 15px;
     }
+    .status {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+    }
+    .status img {
+        width: 20px;
+        height: 20px;
+    }
+    .points {
+        font-size: 1rem;
+        color: #555;
+        margin: 5px 0;
+    }
+    .benefits-btn {
+        background-color: #f0f0f0;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+    }
+    .benefits-btn:hover {
+        background-color: #e0e0e0;
+    }
     .profile-info {
         background-color: #f9f9f9;
         padding: 20px;
@@ -51,43 +98,231 @@
         margin: 5px 0;
         color: #555;
     }
-    .profile-actions {
+    .menu-list {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 30px;
+    }
+    .menu-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .menu-list li a {
+        text-decoration: none;
+        color: #333;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .menu-list li a img {
+        width: 20px;
+        height: 20px;
+    }
+    .logout a {
+        color: #ff4444 !important;
+    }
+    .point-history {
+        margin-top: 20px;
+    }
+    .point-history h3 {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #fff;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .bottom-nav a {
         text-align: center;
+        text-decoration: none;
+        color: #666;
     }
-    .profile-actions .btn {
-        margin: 5px;
-        padding: 10px 20px;
-        transition: background-color 0.3s ease;
+    .bottom-nav a.active {
+        color: #007bff;
     }
-    .profile-actions .btn:hover {
-        opacity: 0.9;
+    .bottom-nav img {
+        width: 24px;
+        height: 24px;
+        display: block;
+        margin: 0 auto 5px;
+    }
+    /* Messages */
+    .messages {
+        margin-bottom: 20px;
+    }
+    .messages .alert {
+        padding: 10px;
+        border-radius: 5px;
+    }
+    /* Responsivité */
+    @media (max-width: 576px) {
+        .profile-container {
+            padding: 15px;
+            margin: 20px;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+        }
+        .profile-header h2 {
+            font-size: 1.5rem;
+        }
+        .profile-info h3 {
+            font-size: 1.2rem;
+        }
+        .menu-list li a {
+            font-size: 14px;
+        }
+        .bottom-nav {
+            padding: 5px 0;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="profile-container">
-    <div class="profile-header">
-        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" alt="Avatar" class="profile-avatar">
-        <h2>{{ user.username }}</h2>
-        {% if user.is_manager %}
-        <span class="badge bg-success">Gestionnaire</span>
-        {% else %}
-        <span class="badge bg-primary">Client</span>
-        {% endif %}
+    <!-- Affichage des messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- En-tête -->
+    <div class="header">
+        <a href="{% url 'index' %}" class="back-arrow">←</a>
+        <h1>Profil</h1>
+        <div style="width: 24px;"></div> <!-- Espace pour alignement -->
+    </div>
+
+    <!-- Section principale -->
+    <div class="profile-header">
+        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" alt="Photo de profil de {{ user.username }}" class="profile-avatar">
+        <h2>{{ user.username }}</h2>
+        <p>{{ user.email|default:"Non spécifié" }}</p>
+        <div class="status">
+            <img src="{% static 'images/medal.png' %}" alt="Medal Icon">
+            {% if user.is_manager %}
+            <span class="badge bg-success" aria-label="Rôle : Gestionnaire">Gestionnaire</span>
+            {% else %}
+            <span class="badge bg-primary" aria-label="Rôle : Client">Client</span>
+            {% endif %}
+        </div>
+        <p class="points">700 pts</p> <!-- Points fictifs, à remplacer par un champ réel si nécessaire -->
+        <button class="benefits-btn">See Benefits</button>
+    </div>
+
+    <!-- Informations personnelles -->
     <div class="profile-info">
         <h3>Informations Personnelles</h3>
-        <p><strong>Email :</strong> {{ user.email }}</p>
-        <p><strong>Nom :</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Email :</strong> {{ user.email|default:"Non spécifié" }}</p>
+        <p><strong>Nom :</strong> {% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}Non spécifié{% endif %}</p>
         <p><strong>Bio :</strong> {{ user.profile.bio|default:"Aucune bio disponible." }}</p>
         <p><strong>Date d'inscription :</strong> {{ user.date_joined|date:"d M Y" }}</p>
     </div>
-    <div class="profile-actions">
-        <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">Modifier le Profil</a>
-        <a href="{% url 'users:password_change' %}" class="btn btn-secondary">Changer le Mot de Passe</a>
-        <a href="{% url 'users:favorites' %}" class="btn btn-info">Voir mes Favoris</a>
-        <a href="{% url 'orders:order_history' %}" class="btn btn-success">Historique des Commandes</a>
+
+    <!-- Menu de navigation -->
+    <ul class="menu-list">
+        <li>
+            <a href="{% url 'users:edit_profile' %}">
+                <img src="{% static 'images/edit.jpg' %}" alt="Edit Icon">
+                Modifier le Profil
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'users:password_change' %}">
+                <img src="{% static 'images/changer.jpg' %}" alt="Password Icon">
+                Changer le Mot de Passe
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'users:favorites' %}">
+                <img src="{% static 'images/favoris.png' %}" alt="Favorites Icon">
+                Voir mes Favoris
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'orders:order_history' %}">
+                <img src="{% static 'images/order-history.png' %}" alt="Orders Icon">
+                Historique des Commandes
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'users:messages' %}">
+                <img src="{% static 'images/message.jpg' %}" alt="Messages Icon">
+                Messages
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'users:notifications' %}">
+                <img src="{% static 'images/notification.jpg' %}" alt="Notifications Icon">
+                Notifications
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'users:account_settings' %}">
+                <img src="{% static 'images/payement.png' %}" alt="Payment Icon">
+                Payment Method
+            </a>
+            <span>➔</span>
+        </li>
+        <li>
+            <a href="{% url 'contact' %}">
+                <img src="{% static 'images/help.png' %}" alt="Help Icon">
+                Get Help
+            </a>
+            <span>➔</span>
+        </li>
+        <li class="logout">
+            <a href="{% url 'users:logout' %}">
+                <img src="{% static 'images/logout.png' %}" alt="Logout Icon">
+                Log Out
+            </a>
+            <span>➔</span>
+        </li>
+    </ul>
+
+    <!-- Historique des points (simulé avec les commandes) -->
+    <div class="point-history">
+        <h3>Historique</h3>
+        {% for order in user.orders.all|slice:":5" %}
+            <div class="history-item">
+                <span>{{ order.created_at|date:"d M Y, H:i" }}</span>
+                <span>Commande #{{ order.id }} - {{ order.status }}</span>
+            </div>
+        {% empty %}
+            <p>Aucun historique disponible.</p>
+        {% endfor %}
     </div>
 </div>
+
 {% endblock %}

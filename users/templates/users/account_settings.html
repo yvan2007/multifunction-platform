@@ -1,40 +1,336 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Paramètres du compte - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .settings-section {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section-title {
+        font-size: 2rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .subsection-title {
+        font-size: 1.5rem;
+        color: #4a90e2;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .subsection-title::after {
+        content: '';
+        width: 50px;
+        height: 3px;
+        background-color: #f7c948;
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+    }
+    .form-container {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .form-container .form-label {
+        font-weight: 500;
+        color: #2d3748;
+    }
+    .form-container .btn-primary {
+        background-color: #4a90e2;
+        border: none;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+    .form-container .btn-primary:hover {
+        background-color: #357abd;
+    }
+    .address-list, .payment-methods-list {
+        list-style: none;
+        padding: 0;
+    }
+    .address-item, .payment-method-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .address-item:hover, .payment-method-item:hover {
+        background-color: #f1f5f9;
+    }
+    .address-item .default-label, .payment-method-item .default-label {
+        color: #28a745;
+        font-weight: 500;
+    }
+    .address-item .actions, .payment-method-item .actions {
+        display: flex;
+        gap: 10px;
+    }
+    .address-item .actions button, .payment-method-item .actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .set-default {
+        color: #4a90e2;
+    }
+    .set-default:hover {
+        background-color: #e6f0fa;
+    }
+    .delete-item {
+        color: #dc3545;
+    }
+    .delete-item:hover {
+        background-color: #f8d7da;
+    }
+    .no-items {
+        text-align: center;
+        color: #777;
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .settings-section {
+            margin: 20px;
+            padding: 15px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+        }
+        .subsection-title {
+            font-size: 1.2rem;
+        }
+        .address-item, .payment-method-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .address-item .actions, .payment-method-item .actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <section class="settings_section layout_padding">
-        <div class="container">
-            <h2 class="section-title">Paramètres du compte</h2>
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            <h3>Modifier le profil</h3>
-            <form method="post">
-                {% csrf_token %}
-                {{ profile_form.as_p }}
-                <button type="submit" class="btn btn-primary">Mettre à jour</button>
-            </form>
-            <h3 class="mt-4">Ajouter une adresse</h3>
-            <form method="post">
+<section class="settings-section">
+    <div class="container">
+        <h2 class="section-title">Paramètres du compte</h2>
+
+        <!-- Messages d'alerte -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Ajouter une adresse -->
+        <h3 class="subsection-title">Ajouter une adresse</h3>
+        <div class="form-container">
+            <form method="post" action="{% url 'users:add_address' %}">
                 {% csrf_token %}
                 {{ address_form.as_p }}
                 <button type="submit" class="btn btn-primary">Ajouter l'adresse</button>
             </form>
-            <h3 class="mt-4">Vos adresses</h3>
-            {% if addresses %}
-                <ul>
-                    {% for address in addresses %}
-                        <li>{{ address.street }}, {{ address.city }}, {{ address.postal_code }}, {{ address.country }} {% if address.is_default %}(Par défaut){% endif %}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Aucune adresse enregistrée.</p>
-            {% endif %}
         </div>
-    </section>
+
+        <!-- Liste des adresses -->
+        <h3 class="subsection-title">Vos adresses</h3>
+        {% if addresses %}
+            <ul class="address-list">
+                {% for address in addresses %}
+                    <li class="address-item" data-address-id="{{ address.id }}">
+                        <div>
+                            {{ address.street }}, {{ address.city }}, {{ address.postal_code }}, {{ address.country }}
+                            {% if address.is_default %}
+                                <span class="default-label">(Par défaut)</span>
+                            {% endif %}
+                        </div>
+                        <div class="actions">
+                            {% if not address.is_default %}
+                                <button class="set-default" data-address-id="{{ address.id }}">Définir par défaut</button>
+                            {% endif %}
+                            <button class="delete-item" data-address-id="{{ address.id }}">Supprimer</button>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-items">Aucune adresse enregistrée.</p>
+        {% endif %}
+
+        <!-- Ajouter une méthode de paiement -->
+        <h3 class="subsection-title">Ajouter une méthode de paiement</h3>
+        <div class="form-container">
+            <form method="post" action="{% url 'users:add_payment_method' %}">
+                {% csrf_token %}
+                {{ payment_form.as_p }}
+                <button type="submit" class="btn btn-primary">Ajouter la méthode</button>
+            </form>
+        </div>
+
+        <!-- Liste des méthodes de paiement -->
+        <h3 class="subsection-title">Vos méthodes de paiement</h3>
+        {% if payment_methods %}
+            <ul class="payment-methods-list">
+                {% for method in payment_methods %}
+                    <li class="payment-method-item" data-method-id="{{ method.id }}">
+                        <div>
+                            {{ method.card_type }} se terminant par {{ method.last_four_digits }}
+                            (Exp: {{ method.expiry_date|date:"m/Y" }})
+                            {% if method.is_default %}
+                                <span class="default-label">(Par défaut)</span>
+                            {% endif %}
+                        </div>
+                        <div class="actions">
+                            {% if not method.is_default %}
+                                <button class="set-default" data-method-id="{{ method.id }}">Définir par défaut</button>
+                            {% endif %}
+                            <button class="delete-item" data-method-id="{{ method.id }}">Supprimer</button>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-items">Aucune méthode de paiement enregistrée.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Définir une adresse comme par défaut
+    document.querySelectorAll('.address-item .set-default').forEach(button => {
+        button.addEventListener('click', function() {
+            const addressId = this.getAttribute('data-address-id');
+            fetch(`/users/set-default-address/${addressId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour l'interface
+                    document.querySelectorAll('.address-item .default-label').forEach(label => label.remove());
+                    document.querySelectorAll('.address-item .set-default').forEach(btn => btn.style.display = 'inline-block');
+                    const addressItem = document.querySelector(`.address-item[data-address-id="${addressId}"]`);
+                    addressItem.querySelector('.actions').insertAdjacentHTML('beforebegin', '<span class="default-label">(Par défaut)</span>');
+                    this.style.display = 'none';
+                } else {
+                    alert('Erreur lors de la mise à jour de l\'adresse par défaut.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Supprimer une adresse
+    document.querySelectorAll('.address-item .delete-item').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette adresse ?')) {
+                const addressId = this.getAttribute('data-address-id');
+                fetch(`/users/delete-address/${addressId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('.address-item').remove();
+                    } else {
+                        alert('Erreur lors de la suppression de l\'adresse.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+
+    // Définir une méthode de paiement comme par défaut
+    document.querySelectorAll('.payment-method-item .set-default').forEach(button => {
+        button.addEventListener('click', function() {
+            const methodId = this.getAttribute('data-method-id');
+            fetch(`/users/set-default-payment-method/${methodId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour l'interface
+                    document.querySelectorAll('.payment-method-item .default-label').forEach(label => label.remove());
+                    document.querySelectorAll('.payment-method-item .set-default').forEach(btn => btn.style.display = 'inline-block');
+                    const methodItem = document.querySelector(`.payment-method-item[data-method-id="${methodId}"]`);
+                    methodItem.querySelector('.actions').insertAdjacentHTML('beforebegin', '<span class="default-label">(Par défaut)</span>');
+                    this.style.display = 'none';
+                } else {
+                    alert('Erreur lors de la mise à jour de la méthode de paiement par défaut.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Supprimer une méthode de paiement
+    document.querySelectorAll('.payment-method-item .delete-item').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette méthode de paiement ?')) {
+                const methodId = this.getAttribute('data-method-id');
+                fetch(`/users/delete-payment-method/${methodId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('.payment-method-item').remove();
+                    } else {
+                        alert('Erreur lors de la suppression de la méthode de paiement.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

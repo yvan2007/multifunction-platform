@@ -1,35 +1,228 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Favoris - {{ block.super }}{% endblock %}
+{% block title %}Mes Favoris - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    .favorites-section {
+        padding: 40px 0;
+        background-color: #f8f9fa;
+    }
+    .favorites-section .container {
+        max-width: 1200px;
+    }
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+    .section-title::after {
+        content: '';
+        width: 60px;
+        height: 4px;
+        background-color: #007bff;
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    .favorite-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .favorite-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .favorite-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-bottom: 1px solid #eee;
+    }
+    .favorite-card-body {
+        padding: 15px;
+        text-align: center;
+    }
+    .favorite-card-body h5 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .favorite-card-body p {
+        font-size: 1rem;
+        color: #e74c3c;
+        margin-bottom: 15px;
+    }
+    .favorite-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border: none;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        border-radius: 50px;
+        transition: background-color 0.3s ease;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    .btn-danger i {
+        margin-right: 5px;
+    }
+    .no-favorites {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #666;
+        padding: 40px 0;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .message-container {
+        margin-bottom: 20px;
+        display: none;
+        text-align: center;
+    }
+    @media (max-width: 768px) {
+        .favorites-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+        .favorite-card img {
+            height: 150px;
+        }
+        .section-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <section class="favorites_section layout_padding">
-        <div class="container">
-            <h2 class="section-title">Vos Favoris</h2>
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            {% if favorites %}
-                <ul>
-                    {% for favorite in favorites %}
-                        <li>
-                            {{ favorite.product.name }} - {{ favorite.product.price }} €
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="product_id" value="{{ favorite.product.id }}">
-                                <input type="hidden" name="action" value="remove">
-                                <button type="submit" class="btn btn-danger btn-sm">Retirer</button>
-                            </form>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Vous n'avez aucun article en favoris.</p>
-            {% endif %}
-        </div>
-    </section>
+<section class="favorites-section">
+    <div class="container">
+        <h1 class="section-title">Mes Favoris</h1>
+
+        <!-- Conteneur pour les messages -->
+        <div class="message-container" id="favorite-message"></div>
+
+        {% if favorites %}
+            <div class="favorites-grid">
+                {% for favorite in favorites %}
+                    <div class="favorite-card">
+                        <a href="{% url 'ecommerce:product_detail' favorite.product.slug %}">
+                            {% if favorite.product.primary_image %}
+                                <img src="{{ favorite.product.primary_image.image.url }}" alt="{{ favorite.product.primary_image.alt_text|default:favorite.product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/200" alt="Image par défaut">
+                            {% endif %}
+                        </a>
+                        <div class="favorite-card-body">
+                            <h5>{{ favorite.product.name }}</h5>
+                            <p>{{ favorite.product.price|floatformat:2 }} FCFA</p>
+                            <div class="favorite-actions">
+                                <form method="post" action="{% url 'ecommerce:toggle_favorite' favorite.product.slug %}" class="remove-favorite-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash-alt"></i> Retirer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-favorites">
+                <p>Vous n'avez aucun produit dans vos favoris.</p>
+                <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Découvrir des produits</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.remove-favorite-form');
+    const messageContainer = document.getElementById('favorite-message');
+
+    forms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const card = this.closest('.favorite-card');
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageContainer.style.display = 'block';
+                if (data.success && !data.is_favorited) {
+                    // Supprimer la carte de l'interface
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        // Vérifier s'il reste des favoris
+                        const remainingCards = document.querySelectorAll('.favorite-card');
+                        if (remainingCards.length === 0) {
+                            const container = document.querySelector('.favorites-grid');
+                            container.innerHTML = `
+                                <div class="no-favorites">
+                                    <p>Vous n'avez aucun produit dans vos favoris.</p>
+                                    <a href="{% url 'ecommerce:product_list' %}" class="btn btn-primary">Découvrir des produits</a>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                    messageContainer.className = 'message-container alert alert-info';
+                    messageContainer.textContent = data.message || 'Produit retiré des favoris.';
+                } else {
+                    messageContainer.className = 'message-container alert alert-danger';
+                    messageContainer.textContent = data.message || 'Une erreur est survenue.';
+                }
+                // Cacher le message après 3 secondes
+                setTimeout(() => {
+                    messageContainer.style.display = 'none';
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageContainer.style.display = 'block';
+                messageContainer.className = 'message-container alert alert-danger';
+                messageContainer.textContent = 'Une erreur est survenue lors de la communication avec le serveur.';
+                setTimeout(() => {
+                    messageContainer.style.display = 'none';
+                }, 3000);
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

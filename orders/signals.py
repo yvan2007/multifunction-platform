@@ -3,7 +3,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
 from .models import Order
+from users.models import Notification
 
 @receiver(post_save, sender=Order)
 def send_order_status_notification(sender, instance, created, **kwargs):
@@ -37,4 +43,41 @@ def send_order_status_notification(sender, instance, created, **kwargs):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[instance.user.email],  # Assurez-vous que `user` est lié à `Order` et a un champ `email`
             fail_silently=False,
+        )
+
+
+
+@receiver(post_save, sender=Order)
+def order_notification(sender, instance, created, **kwargs):
+    if created:
+        # Nouvelle commande : notifier le client
+        Notification.objects.create(
+            user=instance.user,
+            message=f"Votre commande #{instance.id} a été passée avec succès.",
+            notification_type='new_order',
+            action_url=reverse('orders:order_detail', args=[instance.id])
+        )
+        # Envoyer un email au client
+        send_mail(
+            subject=f"Nouvelle commande #{instance.id}",
+            message=f"Votre commande a été passée avec succès.\n\nDétails: {instance}\n\nConsultez les détails: {instance.get_absolute_url()}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.user.email],
+            fail_silently=True,
+        )
+    elif instance.status == 'delivered':
+        # Commande livrée : notifier le client
+        Notification.objects.create(
+            user=instance.user,
+            message=f"Votre commande #{instance.id} a été livrée.",
+            notification_type='order_delivered',
+            action_url=reverse('orders:order_detail', args=[instance.id])
+        )
+        # Envoyer un email au client
+        send_mail(
+            subject=f"Commande #{instance.id} livrée",
+            message=f"Votre commande a été livrée avec succès.\n\nDétails: {instance}\n\nConsultez les détails: {instance.get_absolute_url()}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.user.email],
+            fail_silently=True,
         )

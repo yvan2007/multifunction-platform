@@ -1,7 +1,7 @@
 # users/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Profile, Address, Favorite, Message, Notification  # Ajout de Notification
+from .models import CustomUser, Profile, Address, Favorite, Message, Notification
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -32,6 +32,6 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'recipient', 'timestamp', 'is_read')
+    list_display = ('sender', 'recipient', 'created_at', 'is_read')  # Changed 'timestamp' to 'created_at'
     list_filter = ('is_read',)
     search_fields = ('sender__username', 'recipient__username')

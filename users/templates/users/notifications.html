@@ -1,26 +1,175 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-section {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section-title {
+        font-size: 2rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .notifications-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .notifications-header .btn {
+        font-size: 0.9rem;
+    }
+    .notifications-list {
+        list-style: none;
+        padding: 0;
+    }
+    .notification-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .notification-item:hover {
+        background-color: #f9f9f9;
+    }
+    .notification-item.unread {
+        background-color: #e7f3ff;
+        font-weight: bold;
+    }
+    .notification-icon {
+        width: 30px;
+        height: 30px;
+        margin-right: 15px;
+    }
+    .notification-content {
+        flex: 1;
+    }
+    .notification-content a {
+        text-decoration: none;
+        color: #333;
+    }
+    .notification-content a:hover {
+        color: #007bff;
+    }
+    .notification-content .notification-type {
+        font-weight: bold;
+        color: #007bff;
+    }
+    .notification-content .notification-message {
+        margin: 5px 0;
+        color: #555;
+    }
+    .notification-content .notification-date {
+        font-size: 0.85rem;
+        color: #777;
+    }
+    .notification-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .notification-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .mark-read {
+        color: #28a745;
+    }
+    .mark-read:hover {
+        background-color: #e6f4ea;
+    }
+    .delete-notification {
+        color: #dc3545;
+    }
+    .delete-notification:hover {
+        background-color: #f8d7da;
+    }
+    .no-notifications {
+        text-align: center;
+        color: #777;
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .notifications-section {
+            margin: 20px;
+            padding: 15px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+        }
+        .notification-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .notification-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="section-title">Notifications</h2>
-    {% if notifications %}
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <button type="submit" name="mark_as_read" class="btn btn-primary">Marquer comme lues</button>
+<section class="notifications-section">
+    <div class="container">
+        <h2 class="section-title">Notifications</h2>
+
+        {% if notifications %}
+        <div class="notifications-header">
+            <div>
+                <button id="mark-all-read" class="btn btn-primary btn-sm">Tout marquer comme lu</button>
+            </div>
+            <form method="post" id="notifications-form">
+                {% csrf_token %}
+                <button type="submit" name="delete_selected" class="btn btn-danger btn-sm">Supprimer la sélection</button>
+            </form>
         </div>
-        <ul class="list-group">
+
+        <ul class="notifications-list">
             {% for notification in notifications %}
-            <li class="list-group-item {% if not notification.is_read %}list-group-item-info{% endif %}">
-                <input type="checkbox" name="notification_ids" value="{{ notification.id }}" class="me-2">
-                <strong>{{ notification.get_notification_type_display }}</strong>: {{ notification.message }}
-                <small class="text-muted float-end">{{ notification.created_at|date:"d/m/Y H:i" }}</small>
+            <li class="notification-item {% if not notification.is_read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                <img src="{% static 'images/notification_icon.png' %}" alt="Notification Icon" class="notification-icon">
+                <div class="notification-content">
+                    <a href="{% if notification.action_url %}{{ notification.action_url }}{% else %}#{% endif %}" onclick="markNotificationAsRead(event, '{{ notification.id }}')">
+                        <span class="notification-type">{{ notification.get_notification_type_display }}</span>:
+                        <span class="notification-message">{{ notification.message }}</span>
+                    </a>
+                    <div class="notification-date">{{ notification.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="notification-actions">
+                    {% if not notification.is_read %}
+                    <button class="mark-read" data-notification-id="{{ notification.id }}">Marquer comme lu</button>
+                    {% endif %}
+                    <button class="delete-notification" data-notification-id="{{ notification.id }}">Supprimer</button>
+                    <input type="checkbox" name="notification_ids" value="{{ notification.id }}" class="me-2" form="notifications-form">
+                </div>
             </li>
             {% endfor %}
         </ul>
-    </form>
-    {% else %}
-    <p>Aucune notification pour le moment.</p>
-    {% endif %}
-</div>
+        {% else %}
+        <p class="no-notifications">Aucune notification pour le moment.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/notifications.js' %}"></script>
 {% endblock %}

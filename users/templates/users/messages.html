@@ -1,46 +1,327 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Messagerie - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .messages_section {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section-title {
+        font-size: 2rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .user-role {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+    .messages-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+    }
+    .tab {
+        padding: 10px 20px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    .tab.active {
+        color: #007bff;
+        border-bottom: 3px solid #007bff;
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .messages-list {
+        list-style: none;
+        padding: 0;
+    }
+    .message-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.3s ease;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+    .message-item:hover {
+        background-color: #f9f9f9;
+    }
+    .message-item.unread {
+        background-color: #e7f3ff;
+        font-weight: bold;
+    }
+    .message-info {
+        flex: 1;
+    }
+    .message-info p {
+        margin: 5px 0;
+        color: #555;
+    }
+    .message-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .message-actions a, .message-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .mark-read {
+        color: #28a745;
+    }
+    .mark-read:hover {
+        background-color: #e6f4ea;
+    }
+    .delete-message {
+        color: #dc3545;
+    }
+    .delete-message:hover {
+        background-color: #f8d7da;
+    }
+    .reply-message {
+        color: #007bff;
+    }
+    .reply-message:hover {
+        background-color: #e7f3ff;
+    }
+    .message-body {
+        display: none;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    .no-messages {
+        text-align: center;
+        color: #777;
+        padding: 20px;
+    }
+    .messages {
+        margin-bottom: 20px;
+    }
+    .messages .alert {
+        padding: 10px;
+        border-radius: 5px;
+    }
+    @media (max-width: 768px) {
+        .messages_section {
+            margin: 20px;
+            padding: 15px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+        }
+        .tab {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+        .message-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .message-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <section class="messages_section layout_padding">
-        <div class="container">
-            <h2 class="section-title">Messagerie</h2>
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            <h3>Messages reçus</h3>
+<section class="messages_section">
+    <div class="container">
+        <h2 class="section-title">Messagerie</h2>
+
+        <!-- Afficher le rôle de l'utilisateur -->
+        <div class="user-role">
+            Vous êtes connecté en tant que : {{ user_role }}
+            <a href="{% url 'users:notifications' %}" class="btn btn-info btn-sm ms-3">Voir les notifications</a>
+        </div>
+
+        <!-- Affichage des messages (succès, erreur, etc.) -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Onglets -->
+        <div class="messages-tabs">
+            <div class="tab active" data-tab="received">Messages reçus</div>
+            <div class="tab" data-tab="sent">Messages envoyés</div>
+        </div>
+
+        <!-- Contenu des messages reçus -->
+        <div class="tab-content active" id="received">
             {% if received_messages %}
-                <ul>
-                    {% for message in received_messages %}
-                        <li>
-                            De : {{ message.sender.username }} - Sujet : {{ message.subject }}
-                            <p>{{ message.body }}</p>
-                            <small>{{ message.sent_at }}</small>
-                        </li>
-                    {% endfor %}
-                </ul>
+            <ul class="messages-list">
+                {% for message in received_messages %}
+                <li class="message-item {% if not message.is_read %}unread{% endif %}" data-message-id="{{ message.id }}">
+                    <div class="message-info">
+                        <p>
+                            <strong>De :</strong> {{ message.sender.username }}
+                            ({{ message.sender.is_manager|yesno:"Gestionnaire,Client" }}) -
+                            <strong>Sujet :</strong> {{ message.subject }}
+                        </p>
+                        <div class="message-body">{{ message.body }}</div>
+                        <small>{{ message.created_at|date:"d M Y, H:i" }}</small>
+                    </div>
+                    <div class="message-actions">
+                        {% if not message.is_read %}
+                        <button class="mark-read" data-message-id="{{ message.id }}">Marquer comme lu</button>
+                        {% endif %}
+                        <a href="{% url 'users:compose_message' %}?reply_to={{ message.id }}" class="reply-message">Répondre</a>
+                        <button class="delete-message" data-message-id="{{ message.id }}">Supprimer</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
             {% else %}
-                <p>Aucun message reçu.</p>
-            {% endif %}
-            <h3>Messages envoyés</h3>
-            {% if sent_messages %}
-                <ul>
-                    {% for message in sent_messages %}
-                        <li>
-                            À : {{ message.recipient.username }} - Sujet : {{ message.subject }}
-                            <p>{{ message.body }}</p>
-                            <small>{{ message.sent_at }}</small>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Aucun message envoyé.</p>
+            <p class="no-messages">Aucun message reçu.</p>
             {% endif %}
         </div>
-    </section>
+
+        <!-- Contenu des messages envoyés -->
+        <div class="tab-content" id="sent">
+            {% if sent_messages %}
+            <ul class="messages-list">
+                {% for message in sent_messages %}
+                <li class="message-item" data-message-id="{{ message.id }}">
+                    <div class="message-info">
+                        <p>
+                            <strong>À :</strong> {{ message.recipient.username }}
+                            ({{ message.recipient.is_manager|yesno:"Gestionnaire,Client" }}) -
+                            <strong>Sujet :</strong> {{ message.subject }}
+                        </p>
+                        <div class="message-body">{{ message.body }}</div>
+                        <small>{{ message.created_at|date:"d M Y, H:i" }}</small>
+                    </div>
+                    <div class="message-actions">
+                        <button class="delete-message" data-message-id="{{ message.id }}">Supprimer</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-messages">Aucun message envoyé.</p>
+            {% endif %}
+        </div>
+
+        <!-- Bouton pour composer un nouveau message -->
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{% url 'users:compose_message' %}" class="btn btn-primary">Nouveau Message</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des onglets
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Afficher/masquer le corps du message
+    document.querySelectorAll('.message-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (!e.target.closest('.message-actions')) {
+                const body = item.querySelector('.message-body');
+                body.style.display = body.style.display === 'block' ? 'none' : 'block';
+            }
+        });
+    });
+
+    // Marquer comme lu via AJAX
+    document.querySelectorAll('.mark-read').forEach(button => {
+        button.addEventListener('click', function() {
+            const messageId = button.dataset.messageId;
+            fetch(`/users/mark-read/${messageId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const messageItem = button.closest('.message-item');
+                    messageItem.classList.remove('unread');
+                    button.remove();
+                } else {
+                    alert('Erreur lors de la mise à jour du message.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Supprimer un message via AJAX
+    document.querySelectorAll('.delete-message').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+                const messageId = button.dataset.messageId;
+                fetch(`/users/delete-message/${messageId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.closest('.message-item').remove();
+                    } else {
+                        alert('Erreur lors de la suppression du message.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+
+    // Fonction pour récupérer le token CSRF
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+});
+</script>
 {% endblock %}

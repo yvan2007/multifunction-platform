@@ -6,15 +6,18 @@ from django.urls import reverse, reverse_lazy
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
-from django.contrib import messages as django_messages  # Alias déjà utilisé
+from django.contrib import messages as django_messages
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.views import PasswordResetView, PasswordChangeView
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # Import des modèles
-from .models import CustomUser, Profile, Address, Favorite, Message, Notification  # Ajout de Notification
+from .models import CustomUser, Profile, Address, Favorite, Message, Notification
 from ecommerce.models import Category, Product, Cart, CartItem
 from orders.models import Order
 from blog.models import Article
+from .forms import UserForm, ProfileForm
 
 # Import des formulaires
 from .forms import (
@@ -178,7 +181,7 @@ def register(request):
             if form.is_valid():
                 user = form.save(commit=False)
                 user.is_manager = True
-                user.generate_secret_code()  # Méthode définie dans CustomUser
+                user.generate_secret_code()
                 user.save()
                 try:
                     send_mail(
@@ -279,21 +282,24 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
-    """Modifier le profil de l'utilisateur."""
     if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
-        if form.is_valid():
-            form.save()
-            django_messages.success(request, "Profil mis à jour avec succès !")
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
             return redirect('users:profile')
     else:
-        form = ProfileForm(instance=request.user.profile)
-    return render(request, 'users/edit_profile.html', {'form': form, 'cart_item_count': get_cart_item_count(request.user)})
+        user_form = UserForm(instance=request.user)
+        profile_form = ProfileForm(instance=request.user.profile)
+    return render(request, 'users/edit_profile.html', {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    })
 
 @login_required
 def change_password(request):
     """Changer le mot de passe de l'utilisateur."""
-    # Using Django's built-in PasswordChangeView
     return PasswordChangeView.as_view(
         template_name='users/change_password.html',
         success_url=reverse_lazy('users:profile'),
@@ -415,7 +421,7 @@ def manage_articles(request):
     categories = Category.objects.filter(category_type='blog', is_active=True)
     if not categories.exists():
         django_messages.warning(request, "Aucune catégorie de blog disponible. Veuillez en créer une avant d'ajouter un article.")
-        articles = Article.objects.none()  # Aucun article si aucune catégorie
+        articles = Article.objects.none()
     else:
         articles = Article.objects.all()
     
@@ -488,7 +494,7 @@ def manage_categories(request):
     filter_type = request.GET.get('filter', 'newest')
     search_query = request.GET.get('search', '')
 
-    categories = Category.objects.filter(is_active=True)  # Afficher toutes les catégories (Blog et Produit)
+    categories = Category.objects.filter(is_active=True)
     if search_query:
         categories = categories.filter(name__icontains=search_query)
 
@@ -561,7 +567,7 @@ def manage_products(request):
     categories = Category.objects.filter(category_type='product', is_active=True)
     if not categories.exists():
         django_messages.warning(request, "Aucune catégorie de produit disponible. Veuillez en créer une avant d'ajouter un produit.")
-        products = Product.objects.none()  # Aucun produit si aucune catégorie
+        products = Product.objects.none()
     else:
         products = Product.objects.filter(is_active=True)
         if search_query:
@@ -580,7 +586,6 @@ def manage_products(request):
             django_messages.success(request, "Produit supprimé avec succès.")
             return redirect('users:manage_products')
         else:
-            # Gestion du formulaire dans le modal
             form = ProductForm(request.POST)
             image_form = ProductImageForm(request.POST, request.FILES)
             if form.is_valid() and image_form.is_valid():
@@ -588,14 +593,13 @@ def manage_products(request):
                 product.is_active = True
                 product.save()
                 form.save_m2m()
-                if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+                if image_form.cleaned_data['image']:
                     image = image_form.save(commit=False)
                     image.product = product
                     image.save()
                 django_messages.success(request, "Produit ajouté avec succès.")
                 return redirect('users:manage_products')
 
-    # Pour le GET, passer les formulaires au contexte
     form = ProductForm()
     image_form = ProductImageForm()
 
@@ -623,7 +627,7 @@ def add_product(request):
             product.is_active = True
             product.save()
             form.save_m2m()
-            if image_form.cleaned_data['image']:  # Vérifier si une image a été uploadée
+            if image_form.cleaned_data['image']:
                 image = image_form.save(commit=False)
                 image.product = product
                 image.save()
@@ -644,7 +648,6 @@ def edit_product(request, product_id):
         if form.is_valid() and image_form.is_valid():
             form.save()
             if image_form.cleaned_data['image']:
-                # Supprimer les anciennes images si nécessaire
                 product.images.all().delete()
                 image = image_form.save(commit=False)
                 image.product = product
@@ -660,7 +663,7 @@ def edit_product(request, product_id):
 @manager_required
 def manage_orders(request):
     """Gérer les commandes (CRUD)."""
-    orders = Order.objects.all().order_by('-created_at')  # Order by newest first
+    orders = Order.objects.all().order_by('-created_at')
     return render(request, 'users/manage_orders.html', {
         'orders': orders,
         'cart_item_count': get_cart_item_count(request.user)
@@ -675,9 +678,7 @@ def manager_update_order_status(request, order_id):
             order.status = new_status
             order.save()
 
-            # Send email and create notification if the status is "delivered"
             if new_status == 'delivered':
-                # Email notification (déjà existant)
                 subject = "Votre commande a été livrée !"
                 message = (
                     f"Bonjour {order.user.username},\n\n"
@@ -696,7 +697,6 @@ def manager_update_order_status(request, order_id):
                     fail_silently=False,
                 )
 
-                # Créer une notification pour le client
                 Notification.objects.create(
                     user=order.user,
                     notification_type='order_delivered',
@@ -721,7 +721,6 @@ def manager_delete_order(request, order_id):
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     if request.method == 'POST':
-        # Only allow cancellation if the order is in "pending" or "processing" status
         if order.status in ['pending', 'processing']:
             order.status = 'cancelled'
             order.save()
@@ -733,15 +732,218 @@ def cancel_order(request, order_id):
 @login_required
 def notifications(request):
     """Afficher les notifications de l'utilisateur."""
-    notifications = request.user.notifications.all()
-    # Marquer les notifications comme lues (optionnel)
-    if request.method == 'POST' and 'mark_as_read' in request.POST:
-        notification_ids = request.POST.getlist('notification_ids')
-        request.user.notifications.filter(id__in=notification_ids).update(is_read=True)
-        django_messages.success(request, "Notifications marquées comme lues.")  # Utilisation de django_messages
-        return redirect('users:notifications')
-
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'users/notifications.html', {
         'notifications': notifications,
         'cart_item_count': get_cart_item_count(request.user),
     })
+
+@login_required
+@require_POST
+def mark_notification_read(request):
+    """Marquer une notification comme lue via AJAX."""
+    notification_id = request.POST.get('notification_id')
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notification not found'}, status=404)
+
+@login_required
+def get_notification_metadata(request):
+    """Return metadata about the user's notifications (e.g., unread count)."""
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    data = {
+        'unread_count': unread_count,
+    }
+    return JsonResponse(data)
+
+
+
+# users/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages as django_messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import CustomUser, Profile, Address, Favorite, Message, Notification
+from .forms import CustomAuthenticationForm, CustomUserCreationForm, ManagerCreationForm, MessageForm
+
+# ... (autres vues existantes)
+
+@login_required
+def user_messages(request):
+    """Afficher les messages envoyés et reçus par l'utilisateur (uniquement entre clients et gestionnaires)."""
+    if request.user.is_manager:
+        # Gestionnaire : voir les messages reçus des clients et envoyés aux clients
+        received_messages = Message.objects.filter(recipient=request.user, sender__is_manager=False)
+        sent_messages = Message.objects.filter(sender=request.user, recipient__is_manager=False)
+    else:
+        # Client : voir les messages reçus des gestionnaires et envoyés aux gestionnaires
+        received_messages = Message.objects.filter(recipient=request.user, sender__is_manager=True)
+        sent_messages = Message.objects.filter(sender=request.user, recipient__is_manager=True)
+
+    return render(request, 'users/messages.html', {
+        'sent_messages': sent_messages,
+        'received_messages': received_messages,
+        'cart_item_count': get_cart_item_count(request.user),
+        'user_role': 'Gestionnaire' if request.user.is_manager else 'Client',
+    })
+
+@login_required
+@require_POST
+def mark_message_read(request, message_id):
+    """Marquer un message comme lu via AJAX."""
+    message = get_object_or_404(Message, id=message_id, recipient=request.user)
+    message.is_read = True
+    message.save()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def delete_message(request, message_id):
+    """Supprimer un message via AJAX."""
+    message = get_object_or_404(Message, id=message_id)
+    if message.sender == request.user or message.recipient == request.user:
+        message.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+
+@login_required
+def compose_message(request):
+    """Composer un nouveau message ou répondre à un message existant."""
+    reply_to_id = request.GET.get('reply_to')
+    reply_to = None
+    initial_subject = ""
+
+    if reply_to_id:
+        reply_to = get_object_or_404(Message, id=reply_to_id, recipient=request.user)
+        initial_subject = f"Re: {reply_to.subject}"
+
+    # Déterminer les destinataires possibles
+    if request.user.is_manager:
+        # Gestionnaire : peut envoyer uniquement aux clients
+        recipient_queryset = CustomUser.objects.filter(is_manager=False)
+    else:
+        # Client : peut envoyer uniquement aux gestionnaires
+        recipient_queryset = CustomUser.objects.filter(is_manager=True)
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST, recipient_queryset=recipient_queryset)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.save()
+
+            # Créer une notification pour le destinataire
+            Notification.objects.create(
+                user=message.recipient,
+                message=f"Nouveau message de {message.sender.username}: {message.subject}",
+                notification_type='new_message',
+                action_url=reverse('users:messages')
+            )
+
+            # Envoyer un email au destinataire
+            send_mail(
+                subject=f"Nouveau message de {message.sender.username}",
+                message=f"Vous avez reçu un nouveau message:\n\nSujet: {message.subject}\nContenu: {message.body}\n\nConsultez vos messages: {request.build_absolute_uri(reverse('users:messages'))}",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[message.recipient.email],
+                fail_silently=True,
+            )
+
+            django_messages.success(request, "Message envoyé avec succès !")
+            return redirect('users:messages')
+    else:
+        form = MessageForm(
+            recipient_queryset=recipient_queryset,
+            initial={'recipient': reply_to.sender if reply_to else None, 'subject': initial_subject}
+        )
+
+    return render(request, 'users/compose_message.html', {
+        'form': form,
+        'reply_to': reply_to,
+        'cart_item_count': get_cart_item_count(request.user),
+    })
+
+# ... (autres vues et fonction get_cart_item_count)
+def get_cart_item_count(user):
+    if user.is_authenticated:
+        from ecommerce.models import CartItem
+        return CartItem.objects.filter(cart__user=user).count()
+    return 0
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .forms import AddressForm, PaymentMethodForm
+from .models import Address, PaymentMethod
+
+@login_required
+def account_settings(request):
+    addresses = request.user.addresses.all()
+    payment_methods = request.user.payment_methods.all()
+    address_form = AddressForm()
+    payment_form = PaymentMethodForm()
+    return render(request, 'users/account_settings.html', {
+        'addresses': addresses,
+        'payment_methods': payment_methods,
+        'address_form': address_form,
+        'payment_form': payment_form,
+    })
+
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        form = AddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+            return redirect('users:account_settings')
+    return redirect('users:account_settings')
+
+@login_required
+def set_default_address(request, address_id):
+    address = Address.objects.get(id=address_id, user=request.user)
+    address.is_default = True
+    address.save()
+    return JsonResponse({'success': True})
+
+@login_required
+def delete_address(request, address_id):
+    address = Address.objects.get(id=address_id, user=request.user)
+    address.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+def add_payment_method(request):
+    if request.method == 'POST':
+        form = PaymentMethodForm(request.POST)
+        if form.is_valid():
+            method = form.save(commit=False)
+            method.user = request.user
+            method.save()
+            return redirect('users:account_settings')
+    return redirect('users:account_settings')
+
+@login_required
+def set_default_payment_method(request, method_id):
+    method = PaymentMethod.objects.get(id=method_id, user=request.user)
+    method.is_default = True
+    method.save()
+    return JsonResponse({'success': True})
+
+@login_required
+def delete_payment_method(request, method_id):
+    method = PaymentMethod.objects.get(id=method_id, user=request.user)
+    method.delete()
+    return JsonResponse({'success': True})
+# users/views.py
+@login_required
+def favorites_list(request):
+    favorites = request.user.favorites.all().select_related('product')
+    return render(request, 'users/favorites.html', {'favorites': favorites})
