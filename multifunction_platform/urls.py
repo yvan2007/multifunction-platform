@@ -9,6 +9,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 from ecommerce.api import ProductViewSet, CategoryViewSet
 from blog.api import ArticleViewSet
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .views import (
     index, search_products, about, privacy, contact, testimonial,
     add_testimonial, delete_testimonial, subscribe
@@ -60,6 +61,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 
     # CKEditor 5 file upload
     path('ckeditor5/', include('django_ckeditor_5.urls'), name='ck_editor_5_upload_file'),

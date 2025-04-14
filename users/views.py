@@ -591,14 +591,23 @@ def edit_article(request, article_id):
     """Modifier un article existant."""
     article = get_object_or_404(Article, id=article_id)
     if request.method == 'POST':
+        print("Requête POST reçue")  # Débogage
         form = ArticleForm(request.POST, request.FILES, instance=article)
         if form.is_valid():
+            print("Formulaire valide, sauvegarde en cours")  # Débogage
             form.save()
             django_messages.success(request, "Article mis à jour avec succès.")
             return redirect('users:manage_articles')
+        else:
+            print("Formulaire invalide", form.errors)  # Débogage
+            django_messages.error(request, "Erreur lors de la mise à jour de l'article. Vérifiez les champs.")
     else:
         form = ArticleForm(instance=article)
-    return render(request, 'users/edit_article.html', {'form': form, 'article': article, 'cart_item_count': get_cart_item_count(request.user)})
+    return render(request, 'users/edit_article.html', {
+        'form': form,
+        'article': article,
+        'cart_item_count': get_cart_item_count(request.user)
+    })
 
 # Gestion des catégories
 @manager_required
@@ -671,6 +680,12 @@ def edit_category(request, category_id):
     return render(request, 'users/edit_category.html', {'form': form, 'category': category, 'cart_item_count': get_cart_item_count(request.user)})
 
 # Gestion des produits
+# users/views.py
+from django.contrib import messages as django_messages
+from django.shortcuts import render, redirect, get_object_or_404
+from ecommerce.models import Product, Category
+from ecommerce.forms import ProductForm, ProductImageForm, BulkProductImportForm  # Ajouter BulkProductImportForm
+
 @manager_required
 def manage_products(request):
     """Gérer les produits (CRUD)."""
@@ -691,8 +706,19 @@ def manage_products(request):
         else:
             products = products.order_by('-created_at')
 
+    # Gestion de l'importation en masse
+    bulk_form = BulkProductImportForm()
     if request.method == 'POST':
-        if 'delete' in request.POST:
+        if 'bulk_import' in request.POST:
+            bulk_form = BulkProductImportForm(request.POST, request.FILES)
+            if bulk_form.is_valid():
+                created_count, errors = bulk_form.save(request)
+                if created_count > 0:
+                    django_messages.success(request, f"{created_count} produits importés avec succès.")
+                for error in errors:
+                    django_messages.error(request, error)
+                return redirect('users:manage_products')
+        elif 'delete' in request.POST:
             product_id = request.POST.get('product_id')
             product = get_object_or_404(Product, id=product_id)
             product.delete()
@@ -704,6 +730,7 @@ def manage_products(request):
             if form.is_valid() and image_form.is_valid():
                 product = form.save(commit=False)
                 product.is_active = True
+                product.created_by = request.user  # Ajout de l'utilisateur créateur
                 product.save()
                 form.save_m2m()
                 if image_form.cleaned_data['image']:
@@ -721,6 +748,7 @@ def manage_products(request):
         'filter_type': filter_type,
         'form': form,
         'image_form': image_form,
+        'bulk_form': bulk_form,  # Ajouter le formulaire d'importation en masse
         'cart_item_count': get_cart_item_count(request.user),
     })
 

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load widget_tweaks static %}
 
-{% block title %}Ajouter un article{% endblock %}
+{% block title %}Éditer un article{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -109,8 +109,17 @@
 {% block content %}
 <div class="container form-container">
     <div class="form-card" data-aos="fade-up" data-aos-duration="800">
-        <h2 class="form-title">Créer un nouvel article</h2>
-        <form method="post" enctype="multipart/form-data">
+        <h2 class="form-title">Éditer un article</h2>
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" data-aos="fade-up">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" id="edit-article-form">
             {% csrf_token %}
             <div class="mb-4" data-aos="fade-up" data-aos-delay="100">
                 <label for="{{ form.title.id_for_label }}" class="form-label">
@@ -121,11 +130,20 @@
                     <div class="error-message">{{ form.title.errors }}</div>
                 {% endif %}
             </div>
+            <div class="mb-4" data-aos="fade-up" data-aos-delay="150">
+                <label for="{{ form.slug.id_for_label }}" class="form-label">
+                    <i class="fas fa-link text-primary"></i> Slug
+                </label>
+                {{ form.slug|add_class:"form-control"|attr:"placeholder:Slug de l'article" }}
+                {% if form.slug.errors %}
+                    <div class="error-message">{{ form.slug.errors }}</div>
+                {% endif %}
+            </div>
             <div class="mb-4" data-aos="fade-up" data-aos-delay="200">
                 <label for="{{ form.content.id_for_label }}" class="form-label">
                     <i class="fas fa-align-left text-primary"></i> Contenu
                 </label>
-                {{ form.content|add_class:"form-control textarea-field"|attr:"placeholder:Rédigez votre contenu ici..." }}
+                {{ form.content }}
                 {% if form.content.errors %}
                     <div class="error-message">{{ form.content.errors }}</div>
                 {% endif %}
@@ -149,6 +167,18 @@
                 {% endif %}
             </div>
             <div class="mb-4" data-aos="fade-up" data-aos-delay="500">
+                <label for="{{ form.image.id_for_label }}" class="form-label">
+                    <i class="fas fa-image text-primary"></i> Image de couverture
+                </label>
+                {{ form.image|add_class:"form-control" }}
+                {% if form.image.errors %}
+                    <div class="error-message">{{ form.image.errors }}</div>
+                {% endif %}
+                {% if article.image %}
+                    <p>Image actuelle : <img src="{{ article.image.url }}" alt="{{ article.title }}" style="max-width: 100px; margin-top: 10px;"></p>
+                {% endif %}
+            </div>
+            <div class="mb-4" data-aos="fade-up" data-aos-delay="600">
                 <label for="{{ form.status.id_for_label }}" class="form-label">
                     <i class="fas fa-info-circle text-primary"></i> Statut
                 </label>
@@ -157,17 +187,8 @@
                     <div class="error-message">{{ form.status.errors }}</div>
                 {% endif %}
             </div>
-            <div class="mb-4" data-aos="fade-up" data-aos-delay="600">
-                <label for="{{ form.image.id_for_label }}" class="form-label">
-                    <i class="fas fa-image text-primary"></i> Image de couverture
-                </label>
-                {{ form.image|add_class:"form-control" }}
-                {% if form.image.errors %}
-                    <div class="error-message">{{ form.image.errors }}</div>
-                {% endif %}
-            </div>
             <div class="d-flex button-group mt-5" data-aos="fade-up" data-aos-delay="700">
-                <button type="submit" class="btn btn-primary">Publier</button>
+                <button type="submit" class="btn btn-primary">Mettre à jour</button>
                 <a href="{% url 'users:manage_articles' %}" class="btn btn-secondary">Annuler</a>
             </div>
         </form>
@@ -186,7 +207,7 @@
     });
 
     // Animation au focus des champs
-    document.querySelectorAll('.form-control').forEach(input => {
+    document.querySelectorAll('.form-control:not(.ck-editor)').forEach(input => {
         input.addEventListener('focus', () => {
             input.style.transform = 'scale(1.01)';
             input.style.background = '#fff';
@@ -195,6 +216,12 @@
             input.style.transform = 'scale(1)';
             input.style.background = '#f9fafc';
         });
+    });
+
+    // Empêcher la soumission multiple
+    document.getElementById('edit-article-form').addEventListener('submit', function(event) {
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;  // Désactiver le bouton pour éviter les soumissions multiples
     });
 </script>
 {% endblock %}

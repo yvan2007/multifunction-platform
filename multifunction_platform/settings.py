@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'blog',
     'orders',
     'rest_framework',
+    'rest_framework.authtoken',
     'drf_yasg',
     'django_ckeditor_5',
     'axes',
@@ -218,6 +219,7 @@ LOGGING = {
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
